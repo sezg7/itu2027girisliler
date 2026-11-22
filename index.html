@@ -1,0 +1,3329 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  <title>İTÜ 2027 Girişliler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.577.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --navy: #263c45;
+      --ink: #30444a;
+      --muted: #667b7c;
+      --paper: #f5f7f2;
+      --white: #fffefa;
+      --orange: #d5ad84;
+      --accent: #3d6b5e;
+      --danger: #b84a42;
+      --line: #dfe7df;
+    }
+
+    body.night {
+      --navy: #172b31;
+      --ink: #dce8e2;
+      --muted: #a8bbb5;
+      --paper: #142328;
+      --white: #22353a;
+      --orange: #e3b98b;
+      --accent: #6da594;
+      --danger: #e07870;
+      --line: #3b5152;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "DM Sans", sans-serif;
+      overflow-x: hidden;
+      width: 100%;
+    }
+
+    button, input, select, textarea {
+      font-family: "DM Sans", sans-serif;
+      font-size: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    :focus-visible {
+      outline: 3px solid var(--orange);
+      outline-offset: 2px;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* Header & Taşkışla / Arı İkonları */
+    header {
+      background: var(--navy);
+      color: #fff;
+      width: 100%;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding-top: 18px;
+      padding-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+      cursor: pointer;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      background: var(--orange);
+      color: var(--navy);
+      flex-shrink: 0;
+    }
+
+    .brand-mark svg {
+      width: 34px;
+      height: 34px;
+    }
+
+    .bee-svg {
+      display: inline-block;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 5px 12px 5px 5px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .avatar-img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--orange);
+      flex-shrink: 0;
+      display: block;
+    }
+
+    .menu-wrap {
+      position: relative;
+    }
+
+    .menu-panel {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 9px);
+      width: 260px;
+      background: var(--white);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: 0 16px 40px rgba(16, 28, 48, 0.25);
+      z-index: 50;
+      max-height: min(75vh, 540px);
+      overflow-y: auto;
+    }
+
+    .menu-panel[hidden] {
+      display: none;
+    }
+
+    .menu-panel a, .menu-panel button.menu-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 11px 12px;
+      border-radius: 8px;
+    }
+
+    .menu-panel a:hover, .menu-panel button.menu-btn:hover {
+      background: rgba(128, 128, 128, 0.12);
+    }
+
+    .menu-divider {
+      height: 1px;
+      background: var(--line);
+      margin: 6px 0;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.35fr 0.65fr;
+      gap: 32px;
+      align-items: end;
+      padding-top: 42px;
+      padding-bottom: 50px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #f3d0af;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p {
+      margin-top: 0;
+    }
+
+    h1, h2, h3 {
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    h1 {
+      font-size: clamp(34px, 5.5vw, 64px);
+      letter-spacing: -0.05em;
+      line-height: 1.06;
+      margin: 14px 0 16px;
+    }
+
+    .hero p {
+      color: #d0ddd9;
+      line-height: 1.65;
+      max-width: 560px;
+      font-size: 16px;
+      margin-bottom: 0;
+    }
+
+    .hero-links {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .hero-note {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 20px;
+      padding: 24px;
+    }
+
+    .hero-note .iconbox {
+      width: 44px;
+      height: 44px;
+      background: rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #f3d0af;
+      margin-bottom: 16px;
+    }
+
+    .hero-note strong {
+      display: block;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 19px;
+      line-height: 1.35;
+      margin-bottom: 10px;
+    }
+
+    .hero-note span {
+      display: block;
+      font-size: 13.5px;
+      color: #c5d4cf;
+      line-height: 1.55;
+    }
+
+    /* Main & Sections */
+    main {
+      padding-top: 38px;
+      padding-bottom: 72px;
+    }
+
+    section {
+      margin-bottom: 52px;
+    }
+
+    .view-section[hidden] {
+      display: none;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+
+    .kicker {
+      font-weight: 800;
+      color: #ba653e;
+      font-size: 12px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    h2 {
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+
+    .section-head > p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+      max-width: 400px;
+      line-height: 1.5;
+    }
+
+    /* Grids & Cards */
+    .cards, .timer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .two-col-even {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .track-grid, .wall-grid, .two-col {
+      display: grid;
+      grid-template-columns: 350px minmax(0, 1fr);
+      gap: 18px;
+    }
+
+    .card, .panel {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 9px 28px rgba(25, 44, 70, 0.04);
+      min-width: 0;
+    }
+
+    .card {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel {
+      padding: 22px;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 7px;
+      background: #edf2f6;
+      color: #41536b;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .tag.ayt {
+      background: #fff0e6;
+      color: #ba653e;
+    }
+
+    .tag.brans {
+      background: #e6f3ed;
+      color: #337559;
+    }
+
+    .tag.admin {
+      background: var(--orange);
+      color: var(--navy);
+    }
+
+    body.night .tag {
+      background: #334c50;
+      color: #dce8e2;
+    }
+
+    body.night .tag.ayt {
+      background: #584638;
+      color: #f3d0af;
+    }
+
+    body.night .tag.brans {
+      background: #2e5548;
+      color: #c2e5ce;
+    }
+
+    .count {
+      font-size: 12px;
+      color: #d36e43;
+      font-weight: 800;
+    }
+
+    .card h3, .panel h3 {
+      font-size: 19px;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .panel-sub {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+
+    .date {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Timers */
+    .timer {
+      padding: 22px;
+    }
+
+    .timer-top {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 800;
+    }
+
+    .digits {
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(32px, 3.8vw, 46px);
+      font-weight: 700;
+      letter-spacing: -0.05em;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+      margin: 16px 0 6px;
+    }
+
+    body.night .digits {
+      color: #e5f3ed;
+    }
+
+    .timer-desc {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 800;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      transition: transform 0.12s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn.primary {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    body.night .btn.primary {
+      background: #587c7a;
+      color: #fff;
+    }
+
+    .btn.secondary {
+      background: #eef1f3;
+      color: var(--ink);
+    }
+
+    body.night .btn.secondary {
+      background: #3b5152;
+      color: #f3f7f3;
+    }
+
+    .btn.orange {
+      background: var(--orange);
+      color: #1d2c32;
+    }
+
+    .btn.danger {
+      background: #fbe9e7;
+      color: var(--danger);
+    }
+
+    body.night .btn.danger {
+      background: #4b2b2b;
+      color: #f5b7b1;
+    }
+
+    .btn.sm {
+      padding: 7px 11px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Forms */
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 6px;
+      color: var(--ink);
+    }
+
+    .field {
+      margin-bottom: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      max-width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--white);
+      color: var(--ink);
+      padding: 11px 12px;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .save {
+      width: 100%;
+      margin-top: 4px;
+    }
+
+    .message {
+      font-size: 13px;
+      color: var(--accent);
+      min-height: 20px;
+      margin: 10px 0 0;
+      font-weight: 700;
+    }
+
+    .chart-wrap {
+      height: 225px;
+      position: relative;
+      width: 100%;
+    }
+
+    .empty {
+      height: 100%;
+      min-height: 140px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .history {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .history-chip {
+      background: rgba(128, 128, 128, 0.1);
+      border-radius: 9px;
+      padding: 7px 10px;
+      font-size: 12px;
+      color: var(--ink);
+    }
+
+    /* Instagram-style Feed & Avatars */
+    .question-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .post-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      background: var(--paper);
+      overflow-wrap: anywhere;
+    }
+
+    .post-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .post-author {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .post-author img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--orange);
+    }
+
+    .post-photo {
+      width: 100%;
+      max-height: 380px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin: 10px 0;
+      border: 1px solid var(--line);
+      display: block;
+    }
+
+    .comment-list {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 6px;
+    }
+
+    .comment-item {
+      font-size: 12.5px;
+      background: var(--white);
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+
+    .profile-banner {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 20px;
+    }
+
+    .profile-big-avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--orange);
+    }
+
+    .profile-stats {
+      display: flex;
+      gap: 18px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .insta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .insta-tile {
+      position: relative;
+      aspect-ratio: 1 / 1;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--paper);
+    }
+
+    .insta-tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .insta-tile-cap {
+      position: absolute;
+      inset: auto 0 0 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.78));
+      color: #fff;
+      padding: 18px 10px 8px;
+      font-size: 11.5px;
+    }
+
+    /* Members Directory Grid */
+    .member-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .member-card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: var(--paper);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+
+    .member-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--orange);
+    }
+
+    .member-card img {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--orange);
+      flex-shrink: 0;
+    }
+
+    /* Chat */
+    .chat-box {
+      height: 360px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      margin-bottom: 12px;
+    }
+
+    .chat-msg {
+      max-width: 82%;
+      padding: 10px 13px;
+      border-radius: 14px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      align-self: flex-start;
+    }
+
+    .chat-msg.mine {
+      align-self: flex-end;
+      background: rgba(213, 173, 132, 0.22);
+      border-color: var(--orange);
+    }
+
+    /* Ranking Table */
+    .rank-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+
+    .rank-table th, .rank-table td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .rank-table th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    /* Admin Tabs */
+    .admin-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .tab-btn {
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--white);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tab-btn.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+    }
+
+    body.night .tab-btn.active {
+      background: var(--orange);
+      color: var(--navy);
+      border-color: var(--orange);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(12, 20, 24, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 450px;
+      background: var(--white);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+
+    .avatar-picker-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .avatar-opt {
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      padding: 6px;
+      background: var(--paper);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .avatar-opt.selected {
+      border-color: var(--orange);
+      background: rgba(213, 173, 132, 0.22);
+    }
+
+    .avatar-opt img {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 24px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Mobile Mode & Responsive */
+    body.mobile-mode .shell {
+      max-width: 460px;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+
+    body.mobile-mode .topbar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    body.mobile-mode .top-actions {
+      justify-content: space-between;
+    }
+
+    body.mobile-mode .hero,
+    body.mobile-mode .cards,
+    body.mobile-mode .timer-grid,
+    body.mobile-mode .track-grid,
+    body.mobile-mode .wall-grid,
+    body.mobile-mode .two-col,
+    body.mobile-mode .two-col-even,
+    body.mobile-mode .field-row {
+      grid-template-columns: 1fr;
+    }
+
+    body.mobile-mode .hero-note {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+      .cards, .timer-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .track-grid, .wall-grid, .two-col, .two-col-even {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .shell {
+        padding: 0 14px;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding-top: 14px;
+        padding-bottom: 14px;
+      }
+      .top-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .top-actions .btn {
+        font-size: 12px;
+        padding: 8px 10px;
+      }
+      .hero {
+        padding-top: 26px;
+        padding-bottom: 32px;
+        gap: 18px;
+      }
+      .hero-note {
+        display: none;
+      }
+      h1 {
+        font-size: 32px;
+      }
+      .cards, .timer-grid, .field-row {
+        grid-template-columns: 1fr;
+      }
+      .insta-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      main {
+        padding-top: 26px;
+        padding-bottom: 44px;
+      }
+      section {
+        margin-bottom: 34px;
+      }
+      .panel, .card {
+        padding: 16px;
+      }
+      .menu-panel {
+        width: min(260px, calc(100vw - 28px));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <div class="topbar">
+        <div class="brand" onclick="openSection('#takvim')">
+          <!-- İTÜ Taşkışla Tarihi Bina Eskizi Sembolü -->
+          <span class="brand-mark" aria-hidden="true" title="İTÜ Taşkışla Eskizi">
+            <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 25 L32 13 L58 25" />
+              <path d="M18 25 L32 17 L46 25" />
+              <line x1="8" y1="25" x2="56" y2="25" />
+              <line x1="10" y1="25" x2="10" y2="50" />
+              <line x1="18" y1="25" x2="18" y2="50" />
+              <line x1="26" y1="25" x2="26" y2="50" />
+              <line x1="38" y1="25" x2="38" y2="50" />
+              <line x1="46" y1="25" x2="46" y2="50" />
+              <line x1="54" y1="25" x2="54" y2="50" />
+              <path d="M10 34 Q14 29 18 34" />
+              <path d="M18 34 Q22 29 26 34" />
+              <path d="M27 36 Q32 28 37 36" />
+              <path d="M38 34 Q42 29 46 34" />
+              <path d="M46 34 Q50 29 54 34" />
+              <line x1="6" y1="50" x2="58" y2="50" />
+              <line x1="4" y1="54" x2="60" y2="54" />
+            </svg>
+          </span>
+          <span>İTÜ 2027 girişliler</span>
+        </div>
+
+        <div class="top-actions">
+          <div id="auth-header-slot"></div>
+          <button id="desktop-toggle" class="btn secondary" type="button" aria-pressed="false">Mobil görünüm</button>
+          <button id="theme-toggle" class="btn secondary" type="button" aria-pressed="false">Gece modu</button>
+          <div class="menu-wrap">
+            <button id="menu-toggle" class="btn orange" type="button" aria-expanded="false" aria-controls="site-menu">
+              <i data-lucide="menu"></i> Menü
+            </button>
+            <nav id="site-menu" class="menu-panel" aria-label="Bölümler" hidden>
+              <a href="#takvim">Ana sayfa · Takvim</a>
+              <a href="#kronometre">Kronometre ve Geri Sayım</a>
+              <a href="#gelisim">Net / Süre Grafiklerim</a>
+              <a href="#soru-duvari">Soru Duvarı</a>
+              <a href="#masa-paylasimi">Masam · Çalışma Ortamı</a>
+              <a href="#sohbet">Tartışma & Sohbet</a>
+              <a href="#profil">Üyeler & Profiller</a>
+              <a href="#ayarlar">Ayarlar & Talepler</a>
+              <div id="admin-menu-slot"></div>
+              <div class="menu-divider"></div>
+              <div id="auth-menu-slot"></div>
+            </nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div>
+          <span class="eyebrow">
+            İstanbul Teknik Üniversitesi · 2027
+            <svg class="bee-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <ellipse cx="12" cy="13" rx="4.5" ry="6" />
+              <path d="M8 11.5h8M8 14.5h8" />
+              <path d="M8.5 9.5C5.5 7 3 9 5.5 11.5" />
+              <path d="M15.5 9.5C18.5 7 21 9 18.5 11.5" />
+              <path d="M10.5 7L9 4.5M13.5 7L15 4.5" />
+            </svg>
+          </span>
+          <h1>İTÜ 2027 girişliler</h1>
+          <p>İTÜ yolunda üniversite sınavına hazırlananlar için ortak deneme kulübü. Grup denemelerinin tarihlerini birlikte takip et, denemelere katılımını bildir, netlerini sıralamada gör ve çalışma ortamını paylaş.</p>
+
+          <!-- Grup Linkleri Direkt Ana Sayfa Sol Tarafta -->
+          <div class="hero-links">
+            <a class="btn orange" href="https://link.yeolpumta.com/P3R5cGU9Z3JvdXBJbnZpdGUmaWQ9NzcyNzAxNg==" target="_blank" rel="noopener noreferrer">
+              YPT Grubuna Katıl <i data-lucide="external-link"></i>
+            </a>
+            <a class="btn secondary" href="https://t.me/+pTW4wid4OukzY2Y8" target="_blank" rel="noopener noreferrer">
+              Telegram Grubuna Katıl <i data-lucide="external-link"></i>
+            </a>
+          </div>
+        </div>
+
+        <div class="hero-note">
+          <div class="iconbox">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="13" rx="4.5" ry="6" />
+              <path d="M8 11.5h8M8 14.5h8" />
+              <path d="M8.5 9.5C5.5 7 3 9 5.5 11.5" />
+              <path d="M15.5 9.5C18.5 7 21 9 18.5 11.5" />
+              <path d="M10.5 7L9 4.5M13.5 7L15 4.5" />
+            </svg>
+          </div>
+          <strong id="motive-quote">“Arı gibi çalışan, Taşkışla’nın avlusunda buluşur.”</strong>
+          <span id="motive-sub">Her deneme, hedefindeki İTÜ fakültesine atılmış sağlam bir adımdır.</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <!-- 01. ANA SAYFA / TAKVİM + HAFTALIK SIRALAMA -->
+    <section id="takvim" class="view-section" aria-labelledby="takvim-baslik">
+      <div class="section-head">
+        <div>
+          <div class="kicker">01 / Ortak Takvim</div>
+          <h2 id="takvim-baslik">Grup ortak deneme tarihleri</h2>
+        </div>
+        <p>Denemelere katılacağını işaretle, genel deneme netini girerek haftalık sıralamadaki yerini gör.</p>
+      </div>
+
+      <div id="exam-cards" class="cards"></div>
+
+      <!-- Ortak Deneme Haftalık Sıralama -->
+      <div class="panel" style="margin-top:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
+          <div>
+            <h3 style="margin:0;">Haftalık Ortak Deneme Sıralaması</h3>
+            <p class="panel-sub" style="margin:4px 0 0;">Yönetici tarafından eklenen ortak denemelerde adayların net sıralaması.</p>
+          </div>
+          <div style="min-width:220px;">
+            <select id="ranking-exam-select" onchange="renderRankingTable()"></select>
+          </div>
+        </div>
+        <div id="ranking-container"></div>
+      </div>
+    </section>
+
+    <!-- 02. KRONOMETRE & ÖZEL GERİ SAYIM -->
+    <section id="kronometre" class="view-section" aria-labelledby="kronometre-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">02 / Süre Yönetimi</div>
+          <h2 id="kronometre-baslik">Geri sayım ve kronometre</h2>
+        </div>
+        <p>Hazır sınav sürelerini kullan, kendi özel geri sayım süreni belirle veya ayrı kronometreyi çalıştır.</p>
+      </div>
+
+      <div class="two-col-even" style="margin-bottom:18px;">
+        <!-- Geri Sayım Kartı -->
+        <article class="panel timer">
+          <div class="timer-top"><i data-lucide="hourglass"></i> GERİ SAYIM SAYACI</div>
+          <div id="countdown-display" class="digits" role="timer">02:45:00</div>
+          <div id="countdown-label" class="timer-desc">TYT Sınav Süresi (165 dk)</div>
+
+          <div class="actions" style="margin-bottom:12px;">
+            <button type="button" class="btn secondary sm" onclick="setCountdownPreset(165, 'TYT Sınav Süresi (165 dk)')">TYT (165 dk)</button>
+            <button type="button" class="btn secondary sm" onclick="setCountdownPreset(180, 'AYT Sınav Süresi (180 dk)')">AYT (180 dk)</button>
+            <button type="button" class="btn secondary sm" onclick="setCountdownPreset(40, 'Branş Denemesi (40 dk)')">40 dk</button>
+          </div>
+
+          <form onsubmit="applyCustomCountdown(event)" style="display:flex; gap:8px; margin-bottom:12px;">
+            <input id="custom-cd-min" type="number" min="1" max="600" placeholder="Özel süre (dakika)" required>
+            <button type="submit" class="btn secondary">Ayarla</button>
+          </form>
+
+          <div class="actions">
+            <button id="cd-toggle" class="btn primary" type="button" onclick="toggleCountdown()">Başlat</button>
+            <button class="btn secondary" type="button" onclick="resetCountdown()">Sıfırla</button>
+          </div>
+        </article>
+
+        <!-- Ayrı İleri Sayım Kronometresi -->
+        <article class="panel timer">
+          <div class="timer-top"><i data-lucide="timer"></i> SERBEST KRONOMETRE (İLERİ SAYIM)</div>
+          <div id="stopwatch-display" class="digits" role="timer">00:00:00</div>
+          <div class="timer-desc">Soru çözüm veya branş denemesi hızını ölçmek için ileri sayım.</div>
+
+          <div class="actions" style="margin-top:24px;">
+            <button id="sw-toggle" class="btn primary" type="button" onclick="toggleStopwatch()">Başlat</button>
+            <button class="btn secondary" type="button" onclick="lapStopwatch()">Tur Kaydet</button>
+            <button class="btn secondary" type="button" onclick="resetStopwatch()">Sıfırla</button>
+          </div>
+          <div id="sw-laps" class="history" style="margin-top:14px;"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 03. KİŞİSEL NET VE SÜRE GRAFİKLERİ (SADECE KENDİSİ GÖRÜR) -->
+    <section id="gelisim" class="view-section" aria-labelledby="gelisim-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">03 / Kişisel Analiz</div>
+          <h2 id="gelisim-baslik">Kişisel Net & Süre Grafiklerim</h2>
+        </div>
+        <p>Kendi çözdüğün denemelerin adını yazarak net ve süre takibini yap. Bu verileri yalnızca sen görebilirsin.</p>
+      </div>
+
+      <div class="track-grid" style="margin-bottom:20px;">
+        <div class="panel">
+          <h3>Kişisel Deneme Ekle</h3>
+          <p class="panel-sub">Deneme türünü seçtiğinde maksimum soru sayısı otomatik belirlenir.</p>
+          <form id="personal-result-form">
+            <div class="field">
+              <label for="p-exam-name">Çözdüğün Denemenin Adı</label>
+              <input id="p-exam-name" type="text" placeholder="Örn. 3D TYT Deneme 4" required>
+            </div>
+            <div class="field">
+              <label for="p-exam-cat">Deneme / Branş Türü</label>
+              <select id="p-exam-cat" onchange="updateMaxQuestionHint()" required>
+                <option value="TYT Genel" data-max="120">TYT Genel (120 Soru)</option>
+                <option value="AYT Genel" data-max="80">AYT Genel (80 Soru)</option>
+                <option value="TYT Matematik" data-max="40">TYT Matematik (40 Soru)</option>
+                <option value="TYT Türkçe" data-max="40">TYT Türkçe (40 Soru)</option>
+                <option value="TYT Sosyal" data-max="20">TYT Sosyal (20 Soru)</option>
+                <option value="TYT Fen" data-max="20">TYT Fen (20 Soru)</option>
+                <option value="AYT Matematik" data-max="40">AYT Matematik (40 Soru)</option>
+                <option value="AYT Fen" data-max="40">AYT Fen (40 Soru)</option>
+                <option value="AYT Fizik" data-max="14">AYT Fizik (14 Soru)</option>
+                <option value="AYT Kimya" data-max="13">AYT Kimya (13 Soru)</option>
+                <option value="AYT Biyoloji" data-max="13">AYT Biyoloji (13 Soru)</option>
+              </select>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="p-minutes">Süre (dakika)</label>
+                <input id="p-minutes" type="number" min="1" max="600" step="1" placeholder="Örn. 150" required>
+              </div>
+              <div class="field">
+                <label id="p-net-label" for="p-net">Net (Maks. 120)</label>
+                <input id="p-net" type="number" min="0" max="120" step="0.25" placeholder="Örn. 84.5" required>
+              </div>
+            </div>
+            <button class="btn primary save" type="submit">Kişisel Grafiğime Ekle</button>
+            <p id="p-form-msg" class="message"></p>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3>Kişisel Kayıt Geçmişim</h3>
+          <p class="panel-sub">Eklediğin tüm denemeler gizli olarak yalnızca senin hesabında saklanır.</p>
+          <div id="personal-history-list" class="question-list" style="max-height:330px; overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <!-- 3 Ayrı Grafik: TYT (120), AYT (80), Branş (Dinamik 40/20/14/13) -->
+      <div class="cards">
+        <div class="panel">
+          <h3>TYT Genel Grafiği (120 Soru)</h3>
+          <p class="panel-sub">0 - 120 net ölçeğinde TYT gelişimin.</p>
+          <div class="chart-wrap">
+            <div id="tyt-chart-empty" class="empty">Henüz TYT genel sonucu girilmedi.</div>
+            <canvas id="tyt-chart" hidden></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>AYT Genel Grafiği (80 Soru)</h3>
+          <p class="panel-sub">0 - 80 net ölçeğinde AYT gelişimin.</p>
+          <div class="chart-wrap">
+            <div id="ayt-chart-empty" class="empty">Henüz AYT genel sonucu girilmedi.</div>
+            <canvas id="ayt-chart" hidden></canvas>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px;">
+            <h3 style="margin:0;">Branş Grafiği</h3>
+            <select id="branch-filter-select" onchange="renderPersonalCharts()" style="width:auto; padding:6px 8px; font-size:12px;">
+              <option value="TYT Matematik">TYT Mat (40)</option>
+              <option value="TYT Türkçe">TYT Türkçe (40)</option>
+              <option value="TYT Sosyal">TYT Sosyal (20)</option>
+              <option value="TYT Fen">TYT Fen (20)</option>
+              <option value="AYT Matematik">AYT Mat (40)</option>
+              <option value="AYT Fen">AYT Fen (40)</option>
+              <option value="AYT Fizik">AYT Fizik (14)</option>
+              <option value="AYT Kimya">AYT Kimya (13)</option>
+              <option value="AYT Biyoloji">AYT Biyoloji (13)</option>
+            </select>
+          </div>
+          <p id="branch-chart-sub" class="panel-sub">40 soru üzerinden branş gelişimin.</p>
+          <div class="chart-wrap">
+            <div id="branch-chart-empty" class="empty">Bu branşta henüz deneme girilmedi.</div>
+            <canvas id="branch-chart" hidden></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04. SORU DUVARI -->
+    <section id="soru-duvari" class="view-section" aria-labelledby="duvar-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">04 / Birlikte Öğren</div>
+          <h2 id="duvar-baslik">Ortak soru duvarı</h2>
+        </div>
+        <p>Galerinden soru fotoğrafı seçip paylaş, diğer üyelerin sorularına çözüm yaz.</p>
+      </div>
+      <div class="wall-grid">
+        <div class="panel">
+          <h3>Yeni soru paylaş</h3>
+          <p class="panel-sub">Takıldığın sorunun fotoğrafını galerinden seçip ekle.</p>
+          <form id="question-form">
+            <div class="field">
+              <label for="q-subject">Ders / Konu</label>
+              <input id="q-subject" type="text" placeholder="Örn. AYT Fizik · Çembersel Hareket" required>
+            </div>
+            <div class="field">
+              <label for="q-photo">Soru Fotoğrafı (Galeriden Seç)</label>
+              <input id="q-photo" type="file" accept="image/*">
+            </div>
+            <div class="field">
+              <label for="q-content">Açıklama</label>
+              <textarea id="q-content" placeholder="Sorudaki düşünceni veya takıldığın adımı yaz..." required></textarea>
+            </div>
+            <button class="btn primary save" type="submit">Soruyu Paylaş</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3>Paylaşılan sorular</h3>
+          <p id="question-count" class="panel-sub">Henüz soru paylaşılmadı.</p>
+          <div id="question-list" class="question-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 05. MASA PAYLAŞIMI (INSTAGRAM TARZI AKIŞ) -->
+    <section id="masa-paylasimi" class="view-section" aria-labelledby="masa-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">05 / Çalışma Akışı</div>
+          <h2 id="masa-baslik">Masam · Çalışma Ortamı</h2>
+        </div>
+        <p>Çalışma masanı paylaş, arkadaşlarının gönderilerini beğen ve yorum yap.</p>
+      </div>
+      <div class="wall-grid">
+        <div class="panel">
+          <h3>Çalışma masanı paylaş</h3>
+          <p class="panel-sub">Galerinden masa fotoğrafını seç ve bugünkü hedefini yaz.</p>
+          <form id="desk-form">
+            <div class="field">
+              <label for="desk-photo">Masa Fotoğrafı (Galeriden Seç)</label>
+              <input id="desk-photo" type="file" accept="image/*" required>
+            </div>
+            <div class="field">
+              <label for="desk-caption">Not / Hedef</label>
+              <textarea id="desk-caption" placeholder="Bugünkü çalışma planın veya masandan bir kare..." required></textarea>
+            </div>
+            <button class="btn primary save" type="submit">Masayı Paylaş</button>
+          </form>
+        </div>
+
+        <div class="panel">
+          <h3>Kulüp Çalışma Masaları</h3>
+          <p id="desk-count" class="panel-sub">Henüz masa fotoğrafı paylaşılmadı.</p>
+          <div id="desk-list" class="question-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 06. SOHBET / TARTIŞMA ALANI -->
+    <section id="sohbet" class="view-section" aria-labelledby="sohbet-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">
+            06 / Topluluk Odası
+            <svg class="bee-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <ellipse cx="12" cy="13" rx="4.5" ry="6" />
+              <path d="M8 11.5h8M8 14.5h8" />
+              <path d="M8.5 9.5C5.5 7 3 9 5.5 11.5M15.5 9.5C18.5 7 21 9 18.5 11.5" />
+            </svg>
+          </div>
+          <h2 id="sohbet-baslik">İTÜ 2027 Tartışma & Sohbet</h2>
+        </div>
+        <p>Deneme yorumları, kaynak önerileri ve hedef bölümler üzerine anlık sohbet alanı.</p>
+      </div>
+
+      <div class="panel">
+        <div id="chat-box" class="chat-box"></div>
+        <form onsubmit="sendChatMessage(event)" style="display:flex; gap:8px;">
+          <input id="chat-input" type="text" placeholder="Bir mesaj yaz veya kaynak tartışması başlat..." required>
+          <button type="submit" class="btn primary">Gönder</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- 07. HERKESE AÇIK ÜYE PROFİLLERİ VE KİŞİSEL PROFİL -->
+    <section id="profil" class="view-section" aria-labelledby="profil-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">07 / Topluluk Üyeleri</div>
+          <h2 id="profil-baslik">Üye Profilleri</h2>
+        </div>
+        <p>Tüm kayıtlı üyelerin profilleri herkese açıktır. Kendi bilgilerini Ayarlar kısmından düzenleyebilirsin.</p>
+      </div>
+      <div id="profile-container"></div>
+    </section>
+
+    <!-- 08. AYARLAR & TALEP / ŞİKAYET -->
+    <section id="ayarlar" class="view-section" aria-labelledby="ayarlar-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">08 / Hesap Ayarları</div>
+          <h2 id="ayarlar-baslik">Ayarlar ve Talep / Şikayet</h2>
+        </div>
+        <p>Profil fotoğrafını, İTÜ avatarını veya hedef bölümünü buradan düzenle; yöneticiye talep/şikayet ilet.</p>
+      </div>
+      <div id="settings-container"></div>
+    </section>
+
+    <!-- YÖNETİCİ PANELİ -->
+    <section id="admin-panel" class="view-section" aria-labelledby="admin-baslik" hidden>
+      <div class="section-head">
+        <div>
+          <div class="kicker">Yönetim Paneli</div>
+          <h2 id="admin-baslik">Kulüp Yönetim Merkezi</h2>
+        </div>
+        <p>Denemeleri, katılımcıları, gelen şikayet ve talepleri ve üye kısıtlamalarını buradan yönet.</p>
+      </div>
+      <div id="admin-container"></div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <span>İTÜ 2027 girişliler · made by <strong>wizard</strong></span>
+      <span style="display:inline-flex; align-items:center; gap:6px;">
+        <svg class="bee-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <ellipse cx="12" cy="13" rx="4.5" ry="6" />
+          <path d="M8 11.5h8M8 14.5h8" />
+          <path d="M8.5 9.5C5.5 7 3 9 5.5 11.5M15.5 9.5C18.5 7 21 9 18.5 11.5" />
+        </svg>
+        1773’ten geleceğe
+      </span>
+    </div>
+  </footer>
+
+  <!-- SUPABASE GERÇEK ÜYELİK / GİRİŞ MODALI -->
+  <div id="auth-modal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <h3 style="margin:0;">İTÜ 2027 girişliler</h3>
+        <button type="button" class="btn secondary sm" onclick="closeAuthModal()">Kapat</button>
+      </div>
+
+      <div class="admin-tabs" style="margin-bottom:14px;">
+        <button type="button" id="tab-login-btn" class="tab-btn active" onclick="switchAuthTab('login')">Giriş Yap</button>
+        <button type="button" id="tab-register-btn" class="tab-btn" onclick="switchAuthTab('register')">Kayıt Ol</button>
+      </div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="login-email">E-posta Adresi veya Kullanıcı Adı (@nick)</label>
+          <input id="login-email" type="text" placeholder="E-posta adresiniz veya kullanıcı adınız" required>
+        </div>
+        <div class="field">
+          <label for="login-pass">Şifre</label>
+          <input id="login-pass" type="password" placeholder="Şifrenizi girin" required>
+        </div>
+        <button id="login-submit-btn" type="submit" class="btn primary save">Giriş Yap</button>
+        <p id="login-msg" class="message" style="color:var(--danger);"></p>
+      </form>
+
+      <form id="register-form" hidden>
+        <div class="field">
+          <label for="reg-nick">Kullanıcı Adı (Nick) Seçin</label>
+          <input id="reg-nick" type="text" placeholder="Örn. ari2027" required>
+        </div>
+        <div class="field">
+          <label for="reg-email">E-posta Adresi (İsteğe bağlı — boşsa nick üzerinden oluşturulur)</label>
+          <input id="reg-email" type="email" placeholder="ornek@gmail.com">
+        </div>
+        <div class="field">
+          <label for="reg-target">Hedef İTÜ Bölümü</label>
+          <input id="reg-target" type="text" placeholder="Örn. Bilgisayar Mühendisliği" required>
+        </div>
+        <div class="field">
+          <label for="reg-avatar">Profil Fotoğrafı (Galeriden Seçin veya İTÜ Avatarı Kullanın)</label>
+          <input id="reg-avatar" type="file" accept="image/*">
+          <div id="reg-avatar-presets" class="avatar-picker-grid"></div>
+        </div>
+        <div class="field">
+          <label for="reg-pass">Şifre Belirleyin</label>
+          <input id="reg-pass" type="password" minlength="6" placeholder="En az 6 karakter" required>
+        </div>
+        <button id="reg-submit-btn" type="submit" class="btn primary save">Kayıt Ol</button>
+        <p id="reg-msg" class="message" style="color:var(--danger);"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- DETAY / ŞİKAYET / ORTAK NET MODALI -->
+  <div id="info-modal" class="modal-backdrop" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 id="info-modal-title" style="margin:0;">Detay</h3>
+        <button type="button" class="btn secondary sm" onclick="closeInfoModal()">Kapat</button>
+      </div>
+      <div id="info-modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       SUPABASE BAĞLANTISI VE GERÇEK ÜYELİK / PROFİL SİSTEMİ
+       ========================================================================= */
+    const SUPABASE_URL = "https://bypmxeilbbmvnosskped.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_gyHyy8OrH3LxgT3kXcArAQ_oZip0XLN";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const STORAGE_KEY = "itu2027_platform_state_v4";
+    const ADMIN_NICK = "wizard";
+
+    let currentSessionUser = null; // Supabase auth user objesi
+    let currentProfile = null;     // Aktif kullanıcının Supabase profiles satırı
+    let allProfiles = [];          // Herkesin görebileceği tüm profiller dizisi
+
+    /* İTÜ Özel Varsayılan SVG Avatarlar */
+    const ITU_AVATARS = [
+      {
+        id: "bee-gold",
+        label: "İTÜ Arısı",
+        uri: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#263c45"/><ellipse cx="50" cy="54" rx="18" ry="24" fill="#e3b98b"/><path d="M33 48h34M33 60h34" stroke="#263c45" stroke-width="5"/><path d="M36 40C22 28 14 38 26 48M64 40C78 28 86 38 74 48" fill="none" stroke="#fffefa" stroke-width="4" stroke-linecap="round"/><path d="M44 31L38 21M56 31L62 21" stroke="#e3b98b" stroke-width="3.5" stroke-linecap="round"/></svg>`)
+      },
+      {
+        id: "taskisla",
+        label: "Taşkışla",
+        uri: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#3d6b5e"/><path d="M18 46L50 28L82 46" fill="none" stroke="#fffefa" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M24 46v26M37 46v26M50 46v26M63 46v26M76 46v26M18 72h64" stroke="#e3b98b" stroke-width="4" stroke-linecap="round"/></svg>`)
+      },
+      {
+        id: "1773",
+        label: "1773 Arma",
+        uri: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#d5ad84"/><circle cx="50" cy="50" r="38" fill="none" stroke="#263c45" stroke-width="3.5"/><text x="50" y="47" text-anchor="middle" font-family="sans-serif" font-weight="800" font-size="18" fill="#263c45">İTÜ</text><text x="50" y="66" text-anchor="middle" font-family="sans-serif" font-weight="700" font-size="13" fill="#263c45">1773</text></svg>`)
+      },
+      {
+        id: "ayazaga",
+        label: "Ayazağa",
+        uri: "data:image/svg+xml;utf8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" rx="50" fill="#1d2f36"/><polygon points="50,22 76,68 24,68" fill="none" stroke="#e3b98b" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="53" r="7" fill="#fffefa"/></svg>`)
+      }
+    ];
+
+    function getUserAvatar(userObj, fallbackNick) {
+      if (userObj && (userObj.avatar_url || userObj.avatar)) {
+        return userObj.avatar_url || userObj.avatar;
+      }
+      const key = (userObj && (userObj.username || userObj.nick)) || fallbackNick || "itu";
+      let hash = 0;
+      for (let i = 0; i < key.length; i++) hash = key.charCodeAt(i) + ((hash << 5) - hash);
+      return ITU_AVATARS[Math.abs(hash) % ITU_AVATARS.length].uri;
+    }
+
+    function findProfileByNick(nick) {
+      const clean = normalizeNick(nick);
+      return allProfiles.find(p => normalizeNick(p.username) === clean) || null;
+    }
+
+    const MOTIVATION_QUOTES = [
+      { q: "“Arı gibi çalışan, Taşkışla’nın avlusunda buluşur.”", s: "Her deneme, hedefindeki İTÜ fakültesine atılmış sağlam bir adımdır." },
+      { q: "“1773’ten beri süren mühendislik ve bilim tutkusu şimdi senin masanda.”", s: "Bugün çözdüğün her soru, 2027 Eylül’ünde İTÜ kampüsüne attığın adımdır." },
+      { q: "“Disiplin, motivasyonun bittiği yerde seni hedefe taşıyan güçtür.”", s: "Netlerini düzenli kaydet, eksiklerini gör ve pes etmeden devam et." }
+    ];
+
+    const DEFAULT_STATE = {
+      exams: [
+        {
+          id: "tyt-1",
+          name: "TYT Genel Deneme 01",
+          type: "TYT",
+          maxQ: 120,
+          date: "2027-01-16",
+          pdfUrl: "",
+          videoUrl: "",
+          participants: [],
+          scores: []
+        },
+        {
+          id: "ayt-1",
+          name: "AYT Genel Deneme 01",
+          type: "AYT",
+          maxQ: 80,
+          date: "2027-02-13",
+          pdfUrl: "",
+          videoUrl: "",
+          participants: [],
+          scores: []
+        },
+        {
+          id: "brans-1",
+          name: "AYT Matematik Ortak Denemesi",
+          type: "BRANŞ",
+          maxQ: 40,
+          date: "2027-03-06",
+          pdfUrl: "",
+          videoUrl: "",
+          participants: [],
+          scores: []
+        }
+      ],
+      personalResults: [],
+      questions: [],
+      desks: [],
+      chatMessages: [
+        {
+          id: "c-welcome",
+          nick: "İTÜ 2027",
+          text: "İTÜ 2027 girişliler tartışma ve sohbet odasına hoş geldiniz! Deneme analizlerinizi ve kaynak önerilerinizi paylaşabilirsiniz.",
+          createdAt: new Date().toISOString()
+        }
+      ],
+      feedbacks: []
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const parsed = JSON.parse(raw);
+        return {
+          ...structuredClone(DEFAULT_STATE),
+          ...parsed,
+          exams: Array.isArray(parsed.exams) ? parsed.exams : structuredClone(DEFAULT_STATE.exams),
+          personalResults: Array.isArray(parsed.personalResults) ? parsed.personalResults : [],
+          questions: Array.isArray(parsed.questions) ? parsed.questions : [],
+          desks: Array.isArray(parsed.desks) ? parsed.desks : [],
+          chatMessages: Array.isArray(parsed.chatMessages) ? parsed.chatMessages : structuredClone(DEFAULT_STATE.chatMessages),
+          feedbacks: Array.isArray(parsed.feedbacks) ? parsed.feedbacks : []
+        };
+      } catch (err) {
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+
+    let state = loadState();
+    let selectedRegAvatar = ITU_AVATARS[0].uri;
+    let viewedProfileNick = null;
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function escapeHtml(text) {
+      return String(text || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function normalizeNick(nick) {
+      return String(nick || "").trim().replace(/^@+/, "").toLowerCase();
+    }
+
+    function getActiveUser() {
+      if (!currentSessionUser || !currentProfile) return null;
+      return {
+        id: currentSessionUser.id,
+        email: currentSessionUser.email,
+        nick: currentProfile.username,
+        target: currentProfile.target_department || "İTÜ 2027",
+        bio: currentProfile.bio || "",
+        avatar: currentProfile.avatar_url || "",
+        banned: Boolean(currentProfile.banned)
+      };
+    }
+
+    function isAdmin() {
+      const u = getActiveUser();
+      return Boolean(u && u.nick === ADMIN_NICK && !u.banned);
+    }
+
+    function requireMember() {
+      const u = getActiveUser();
+      if (!u) {
+        openAuthModal("login");
+        return null;
+      }
+      if (u.banned) {
+        alert("Hesabınız yönetici tarafından kısıtlanmıştır.");
+        return null;
+      }
+      return u;
+    }
+
+    /* Supabase Veritabanından Profilleri Çekme ve Oturum Senkronizasyonu */
+    async function fetchAllProfiles() {
+      const { data, error } = await sb
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!error && Array.isArray(data)) {
+        allProfiles = data;
+      }
+    }
+
+    async function syncSupabaseSession() {
+      await fetchAllProfiles();
+      const { data: { session } } = await sb.auth.getSession();
+
+      if (session && session.user) {
+        currentSessionUser = session.user;
+        let { data: prof } = await sb
+          .from("profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle();
+
+        if (!prof) {
+          const meta = session.user.user_metadata || {};
+          const fallbackNick = normalizeNick(meta.username || session.user.email.split("@")[0]);
+          const newProf = {
+            id: session.user.id,
+            username: fallbackNick,
+            email: session.user.email,
+            target_department: meta.target_department || "İTÜ 2027",
+            bio: meta.bio || "İTÜ 2027 hedefiyle çalışıyor.",
+            avatar_url: meta.avatar_url || ITU_AVATARS[0].uri
+          };
+          const { data: inserted } = await sb
+            .from("profiles")
+            .upsert(newProf)
+            .select()
+            .single();
+          prof = inserted || newProf;
+          await fetchAllProfiles();
+        }
+        currentProfile = prof;
+      } else {
+        currentSessionUser = null;
+        currentProfile = null;
+      }
+
+      renderAuthUI();
+      renderExams();
+      renderPersonalSection();
+      renderQuestions();
+      renderDesks();
+      renderChat();
+
+      if (!document.getElementById("profil").hidden) renderProfilePage();
+      if (!document.getElementById("ayarlar").hidden) renderSettingsPage();
+      if (!document.getElementById("admin-panel").hidden) renderAdminPanel();
+    }
+
+    sb.auth.onAuthStateChange((_event, _session) => {
+      syncSupabaseSession();
+    });
+
+    function readImageAsDataURL(fileInput, callback) {
+      const file = fileInput && fileInput.files && fileInput.files[0];
+      if (!file) {
+        callback("");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxDim = 420;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          callback(canvas.toDataURL("image/jpeg", 0.78));
+        };
+        img.onerror = () => callback(String(e.target.result || ""));
+        img.src = String(e.target.result || "");
+      };
+      reader.readAsDataURL(file);
+    }
+
+    /* Navigation & Profile Opening */
+    const menuButton = document.getElementById("menu-toggle");
+    const menu = document.getElementById("site-menu");
+
+    function closeMenu() {
+      menu.hidden = true;
+      menuButton.setAttribute("aria-expanded", "false");
+    }
+
+    function openUserProfile(nick) {
+      viewedProfileNick = nick ? normalizeNick(nick) : (getActiveUser() && getActiveUser().nick) || null;
+      openSection("#profil");
+    }
+
+    function openSection(selector) {
+      if (selector === "#admin-panel" && !isAdmin()) {
+        alert("Bu alana erişim yetkiniz bulunmuyor.");
+        return;
+      }
+      const target = document.querySelector(selector);
+      if (!target) return;
+      document.querySelectorAll("main > section").forEach(sec => {
+        sec.hidden = sec !== target;
+      });
+      closeMenu();
+      if (selector === "#takvim") {
+        renderExams();
+        renderRankingTable();
+      }
+      if (selector === "#gelisim") renderPersonalSection();
+      if (selector === "#soru-duvari") renderQuestions();
+      if (selector === "#masa-paylasimi") renderDesks();
+      if (selector === "#sohbet") renderChat();
+      if (selector === "#profil") {
+        fetchAllProfiles().then(() => renderProfilePage());
+      }
+      if (selector === "#ayarlar") renderSettingsPage();
+      if (selector === "#admin-panel") renderAdminPanel();
+      document.querySelector("main").scrollIntoView({ behavior: "smooth" });
+    }
+
+    menuButton.addEventListener("click", (e) => {
+      e.stopPropagation();
+      menu.hidden = !menu.hidden;
+      menuButton.setAttribute("aria-expanded", String(!menu.hidden));
+    });
+
+    menu.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        const href = link.getAttribute("href");
+        if (href === "#profil") {
+          viewedProfileNick = null;
+        }
+        openSection(href);
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".menu-wrap")) closeMenu();
+    });
+
+    /* Mobile / Desktop & Theme Toggle */
+    const viewButton = document.getElementById("desktop-toggle");
+    const themeButton = document.getElementById("theme-toggle");
+
+    function setView(mobile) {
+      document.body.classList.toggle("mobile-mode", mobile);
+      viewButton.textContent = mobile ? "Masaüstü görünüm" : "Mobil görünüm";
+      viewButton.setAttribute("aria-pressed", String(mobile));
+    }
+
+    viewButton.addEventListener("click", () => {
+      setView(!document.body.classList.contains("mobile-mode"));
+    });
+
+    function setTheme(night) {
+      document.body.classList.toggle("night", night);
+      themeButton.textContent = night ? "Gündüz modu" : "Gece modu";
+      themeButton.setAttribute("aria-pressed", String(night));
+      sessionStorage.setItem("club-theme", night ? "night" : "day");
+    }
+
+    themeButton.addEventListener("click", () => {
+      setTheme(!document.body.classList.contains("night"));
+    });
+
+    setTheme(sessionStorage.getItem("club-theme") === "night");
+
+    /* Auth UI & Avatar Picker */
+    function renderRegAvatarPresets() {
+      const box = document.getElementById("reg-avatar-presets");
+      if (!box) return;
+      box.innerHTML = ITU_AVATARS.map(av => `
+        <button type="button" class="avatar-opt ${selectedRegAvatar === av.uri ? "selected" : ""}" onclick="selectPresetAvatar('${av.id}')">
+          <img src="${av.uri}" alt="${escapeHtml(av.label)}">
+          <span>${escapeHtml(av.label)}</span>
+        </button>
+      `).join("");
+    }
+
+    function selectPresetAvatar(id) {
+      const found = ITU_AVATARS.find(a => a.id === id);
+      if (!found) return;
+      selectedRegAvatar = found.uri;
+      renderRegAvatarPresets();
+    }
+
+    function renderAuthUI() {
+      const u = getActiveUser();
+      const headerSlot = document.getElementById("auth-header-slot");
+      const menuSlot = document.getElementById("auth-menu-slot");
+      const adminSlot = document.getElementById("admin-menu-slot");
+
+      if (u) {
+        const av = getUserAvatar(u);
+        headerSlot.innerHTML = `
+          <button type="button" class="user-pill" onclick="openUserProfile('${escapeHtml(u.nick)}')" title="Profilimi Gör">
+            <img src="${av}" class="avatar-img" alt="${escapeHtml(u.nick)}">
+            <span>@${escapeHtml(u.nick)}</span>
+          </button>
+        `;
+        menuSlot.innerHTML = `<button type="button" class="menu-btn" onclick="logoutUser()">Çıkış Yap</button>`;
+      } else {
+        headerSlot.innerHTML = `<button type="button" class="btn secondary" onclick="openAuthModal('login')">Giriş / Kayıt</button>`;
+        menuSlot.innerHTML = `
+          <button type="button" class="menu-btn" onclick="openAuthModal('login')">Giriş Yap</button>
+          <button type="button" class="menu-btn" onclick="openAuthModal('register')">Üye Ol</button>
+        `;
+      }
+
+      if (isAdmin()) {
+        adminSlot.innerHTML = `
+          <div class="menu-divider"></div>
+          <button type="button" class="menu-btn" style="color:#ba653e;" onclick="openSection('#admin-panel')">
+            <span>Yönetici Paneli</span>
+            <span class="tag admin">Yönetim</span>
+          </button>
+        `;
+      } else {
+        adminSlot.innerHTML = "";
+      }
+    }
+
+    function openAuthModal(tab) {
+      closeMenu();
+      switchAuthTab(tab || "login");
+      renderRegAvatarPresets();
+      document.getElementById("login-msg").textContent = "";
+      document.getElementById("reg-msg").textContent = "";
+      document.getElementById("auth-modal").classList.add("open");
+    }
+
+    function closeAuthModal() {
+      document.getElementById("auth-modal").classList.remove("open");
+    }
+
+    function switchAuthTab(tab) {
+      const isLogin = tab === "login";
+      document.getElementById("tab-login-btn").classList.toggle("active", isLogin);
+      document.getElementById("tab-register-btn").classList.toggle("active", !isLogin);
+      document.getElementById("login-form").hidden = !isLogin;
+      document.getElementById("register-form").hidden = isLogin;
+    }
+
+    function nickToAuthEmail(nick) {
+      const safe = normalizeNick(nick).replace(/[^a-z0-9._-]/g, "");
+      return `${safe || "uye"}@itu2027.local`;
+    }
+
+    /* SUPABASE KAYIT OL (SIGN UP + PROFILES INSERT) */
+    document.getElementById("register-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nick = normalizeNick(document.getElementById("reg-nick").value);
+      const rawEmail = document.getElementById("reg-email").value.trim();
+      const email = rawEmail || nickToAuthEmail(nick);
+      const target = document.getElementById("reg-target").value.trim();
+      const pass = document.getElementById("reg-pass").value;
+      const avatarInput = document.getElementById("reg-avatar");
+      const msg = document.getElementById("reg-msg");
+      const btn = document.getElementById("reg-submit-btn");
+
+      msg.style.color = "var(--danger)";
+      msg.textContent = "";
+
+      if (!nick || nick.length < 2) {
+        msg.textContent = "Lütfen en az 2 karakterlik bir kullanıcı adı (nick) seçin.";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "Kaydediliyor...";
+
+      try {
+        const { data: existingNick } = await sb
+          .from("profiles")
+          .select("id")
+          .eq("username", nick)
+          .maybeSingle();
+
+        if (existingNick) {
+          msg.textContent = "Bu kullanıcı adı (@" + nick + ") zaten alınmış.";
+          btn.disabled = false;
+          btn.textContent = "Kayıt Ol";
+          return;
+        }
+
+        readImageAsDataURL(avatarInput, async (uploadedAvatar) => {
+          const finalAvatar = uploadedAvatar || selectedRegAvatar;
+
+          const { data: authData, error: signUpError } = await sb.auth.signUp({
+            email,
+            password: pass,
+            options: {
+              data: {
+                username: nick,
+                target_department: target,
+                avatar_url: finalAvatar
+              }
+            }
+          });
+
+          if (signUpError) {
+            msg.textContent = "Kayıt hatası: " + signUpError.message;
+            btn.disabled = false;
+            btn.textContent = "Kayıt Ol";
+            return;
+          }
+
+          if (authData && authData.user) {
+            await sb.from("profiles").upsert({
+              id: authData.user.id,
+              username: nick,
+              email: email,
+              target_department: target,
+              bio: "İTÜ 2027 hedefiyle çalışıyor.",
+              avatar_url: finalAvatar
+            });
+          }
+
+          btn.disabled = false;
+          btn.textContent = "Kayıt Ol";
+
+          if (authData && !authData.session) {
+            msg.style.color = "var(--accent)";
+            msg.textContent = "Kayıt oluşturuldu! E-posta onayı açıksa gelen kutunu kontrol et; değilse doğrudan Giriş Yap sekmesine geçebilirsin.";
+          } else {
+            await syncSupabaseSession();
+            closeAuthModal();
+            e.target.reset();
+          }
+        });
+      } catch (err) {
+        msg.textContent = "Beklenmeyen bir hata oluştu: " + err.message;
+        btn.disabled = false;
+        btn.textContent = "Kayıt Ol";
+      }
+    });
+
+    /* SUPABASE GİRİŞ YAP (E-POSTA VEYA KULLANICI ADI İLE) */
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const identifier = document.getElementById("login-email").value.trim();
+      const pass = document.getElementById("login-pass").value;
+      const msg = document.getElementById("login-msg");
+      const btn = document.getElementById("login-submit-btn");
+
+      msg.style.color = "var(--danger)";
+      msg.textContent = "";
+      btn.disabled = true;
+      btn.textContent = "Giriş yapılıyor...";
+
+      let emailToTry = identifier;
+      if (!identifier.includes("@")) {
+        const cleanNick = normalizeNick(identifier);
+        const { data: profMatch } = await sb
+          .from("profiles")
+          .select("email")
+          .eq("username", cleanNick)
+          .maybeSingle();
+        emailToTry = (profMatch && profMatch.email) ? profMatch.email : nickToAuthEmail(cleanNick);
+      }
+
+      const { error } = await sb.auth.signInWithPassword({
+        email: emailToTry,
+        password: pass
+      });
+
+      btn.disabled = false;
+      btn.textContent = "Giriş Yap";
+
+      if (error) {
+        msg.textContent = "Giriş başarısız: " + error.message;
+        return;
+      }
+
+      await syncSupabaseSession();
+      closeAuthModal();
+      e.target.reset();
+    });
+
+    /* SUPABASE ÇIKIŞ YAP (SIGN OUT) */
+    async function logoutUser() {
+      await sb.auth.signOut();
+      currentSessionUser = null;
+      currentProfile = null;
+      viewedProfileNick = null;
+      closeMenu();
+      renderAuthUI();
+      openSection("#takvim");
+    }
+
+    /* 01. Ortak Deneme Kartları & Haftalık Sıralama */
+    function renderExams() {
+      const cards = document.getElementById("exam-cards");
+      const rankSelect = document.getElementById("ranking-exam-select");
+      const activeUser = getActiveUser();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const prevRankVal = rankSelect.value;
+      cards.innerHTML = "";
+      rankSelect.innerHTML = "";
+
+      state.exams.forEach(exam => {
+        const dateObj = new Date(exam.date + "T00:00:00");
+        const days = Math.ceil((dateObj - today) / 86400000);
+        const participants = Array.isArray(exam.participants) ? exam.participants : [];
+        const scores = Array.isArray(exam.scores) ? exam.scores : [];
+        const joined = activeUser ? participants.includes(activeUser.nick) : false;
+        const myScore = activeUser ? scores.find(s => s.nick === activeUser.nick) : null;
+        const tagClass = exam.type === "AYT" ? "ayt" : exam.type === "BRANŞ" ? "brans" : "";
+        const dateStr = Number.isNaN(dateObj.getTime())
+          ? exam.date
+          : new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric" }).format(dateObj);
+
+        const card = document.createElement("article");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="card-top">
+            <span class="tag ${tagClass}">${escapeHtml(exam.type)}</span>
+            <span class="count">${days > 0 ? days + " gün kaldı" : days === 0 ? "Bugün" : "Tamamlandı"}</span>
+          </div>
+          <h3>${escapeHtml(exam.name)}</h3>
+          <div class="date">${escapeHtml(dateStr)}</div>
+          <div style="margin-top:12px; display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn secondary sm" onclick="openParticipantsModal('${escapeHtml(exam.id)}')">
+              Katılanlar (${participants.length})
+            </button>
+            <button type="button" class="btn secondary sm" onclick="openSubmitExamScoreModal('${escapeHtml(exam.id)}')">
+              ${myScore ? `Netim: ${myScore.net}` : "Netini Paylaş"}
+            </button>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn ${joined ? "secondary" : "primary"} sm" onclick="toggleJoinExam('${escapeHtml(exam.id)}')">
+              ${joined ? "Katılımı İptal Et" : "Katılacağım"}
+            </button>
+            ${exam.pdfUrl ? `<a class="btn secondary sm" href="${escapeHtml(exam.pdfUrl)}" target="_blank" rel="noopener noreferrer">PDF</a>` : ""}
+            ${exam.videoUrl ? `<a class="btn secondary sm" href="${escapeHtml(exam.videoUrl)}" target="_blank" rel="noopener noreferrer">Çözüm</a>` : ""}
+          </div>
+        `;
+        cards.appendChild(card);
+
+        const opt = document.createElement("option");
+        opt.value = exam.id;
+        opt.textContent = `${exam.name} (${exam.type})`;
+        rankSelect.appendChild(opt);
+      });
+
+      if (prevRankVal && state.exams.some(e => e.id === prevRankVal)) {
+        rankSelect.value = prevRankVal;
+      }
+      renderRankingTable();
+    }
+
+    function toggleJoinExam(examId) {
+      const u = requireMember();
+      if (!u) return;
+      const exam = state.exams.find(item => item.id === examId);
+      if (!exam) return;
+      exam.participants = exam.participants || [];
+      const idx = exam.participants.indexOf(u.nick);
+      if (idx >= 0) exam.participants.splice(idx, 1);
+      else exam.participants.push(u.nick);
+      saveState();
+      renderExams();
+    }
+
+    function openParticipantsModal(examId) {
+      const exam = state.exams.find(item => item.id === examId);
+      if (!exam) return;
+      const list = exam.participants || [];
+      document.getElementById("info-modal-title").textContent = `${exam.name} · Katılanlar (${list.length})`;
+      if (!list.length) {
+        document.getElementById("info-modal-body").innerHTML = `<p class="panel-sub">Bu denemeye henüz katılım bildiren üye yok.</p>`;
+      } else {
+        document.getElementById("info-modal-body").innerHTML = list.map(nick => {
+          const member = findProfileByNick(nick);
+          return `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="closeInfoModal(); openUserProfile('${escapeHtml(nick)}')">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <img src="${getUserAvatar(member, nick)}" class="avatar-img" alt="">
+                <strong>@${escapeHtml(nick)}</strong>
+              </div>
+              <span class="tag">${escapeHtml(member && member.target_department ? member.target_department : "İTÜ 2027")}</span>
+            </div>
+          `;
+        }).join("");
+      }
+      document.getElementById("info-modal").classList.add("open");
+    }
+
+    function openSubmitExamScoreModal(examId) {
+      const u = requireMember();
+      if (!u) return;
+      const exam = state.exams.find(item => item.id === examId);
+      if (!exam) return;
+      const maxQ = exam.maxQ || (exam.type === "AYT" ? 80 : exam.type === "BRANŞ" ? 40 : 120);
+      const existing = (exam.scores || []).find(s => s.nick === u.nick);
+
+      document.getElementById("info-modal-title").textContent = `${exam.name} · Net Paylaş`;
+      document.getElementById("info-modal-body").innerHTML = `
+        <form onsubmit="saveExamScore(event, '${escapeHtml(exam.id)}')">
+          <p class="panel-sub">Paylaştığın net haftalık ortak deneme sıralamasında tüm kulüp üyelerine görünür.</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="ex-sc-net">Netin (Maks. ${maxQ})</label>
+              <input id="ex-sc-net" type="number" min="0" max="${maxQ}" step="0.25" value="${existing ? existing.net : ""}" required>
+            </div>
+            <div class="field">
+              <label for="ex-sc-min">Süre (dakika)</label>
+              <input id="ex-sc-min" type="number" min="1" max="600" step="1" value="${existing ? existing.minutes : ""}" required>
+            </div>
+          </div>
+          <button type="submit" class="btn primary save">Sıralamaya Kaydet</button>
+        </form>
+      `;
+      document.getElementById("info-modal").classList.add("open");
+    }
+
+    function saveExamScore(e, examId) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const exam = state.exams.find(item => item.id === examId);
+      if (!exam) return;
+      const net = Number(document.getElementById("ex-sc-net").value);
+      const minutes = Number(document.getElementById("ex-sc-min").value);
+
+      exam.scores = exam.scores || [];
+      exam.participants = exam.participants || [];
+      if (!exam.participants.includes(u.nick)) exam.participants.push(u.nick);
+
+      const idx = exam.scores.findIndex(s => s.nick === u.nick);
+      const record = { nick: u.nick, net, minutes, updatedAt: new Date().toISOString() };
+      if (idx >= 0) exam.scores[idx] = record;
+      else exam.scores.push(record);
+
+      saveState();
+      closeInfoModal();
+      renderExams();
+    }
+
+    function renderRankingTable() {
+      const container = document.getElementById("ranking-container");
+      const select = document.getElementById("ranking-exam-select");
+      const exam = state.exams.find(e => e.id === select.value) || state.exams[0];
+      const activeUser = getActiveUser();
+
+      if (!exam) {
+        container.innerHTML = `<div class="empty">Henüz ortak deneme tanımlanmadı.</div>`;
+        return;
+      }
+
+      const sorted = [...(exam.scores || [])].sort((a, b) => b.net - a.net || a.minutes - b.minutes);
+      if (!sorted.length) {
+        container.innerHTML = `<div class="empty"><strong>${escapeHtml(exam.name)}</strong> için henüz net paylaşılmadı. Yukarıdaki karttan “Netini Paylaş” butonuna tıklayarak ilk sırayı alabilirsin.</div>`;
+        return;
+      }
+
+      const myRankIndex = activeUser ? sorted.findIndex(s => s.nick === activeUser.nick) : -1;
+      const bannerHtml = myRankIndex >= 0
+        ? `<div style="background:rgba(213,173,132,0.22); border:1px solid var(--orange); padding:10px 14px; border-radius:10px; margin-bottom:12px; font-size:13.5px;">
+             Bu denemede <strong>${sorted.length}</strong> aday arasında <strong>${myRankIndex + 1}.</strong> sıradasın (${sorted[myRankIndex].net} net).
+           </div>`
+        : "";
+
+      container.innerHTML = bannerHtml + `
+        <div style="overflow-x:auto;">
+          <table class="rank-table">
+            <thead>
+              <tr>
+                <th>Sıra</th>
+                <th>Aday</th>
+                <th>Hedef Bölüm</th>
+                <th>Net</th>
+                <th>Süre</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sorted.map((row, idx) => {
+                const member = findProfileByNick(row.nick);
+                const isMe = activeUser && activeUser.nick === row.nick;
+                return `
+                  <tr style="${isMe ? "background:rgba(213,173,132,0.14); font-weight:700;" : ""}">
+                    <td><strong>#${idx + 1}</strong></td>
+                    <td>
+                      <div style="display:flex; align-items:center; gap:8px; cursor:pointer;" onclick="openUserProfile('${escapeHtml(row.nick)}')">
+                        <img src="${getUserAvatar(member, row.nick)}" class="avatar-img" style="width:26px;height:26px;" alt="">
+                        <span>@${escapeHtml(row.nick)}</span>
+                      </div>
+                    </td>
+                    <td>${escapeHtml(member && member.target_department ? member.target_department : "İTÜ 2027")}</td>
+                    <td><strong>${row.net}</strong></td>
+                    <td>${row.minutes} dk</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function closeInfoModal() {
+      document.getElementById("info-modal").classList.remove("open");
+    }
+
+    /* 02. Geri Sayım & Ayrı Kronometre */
+    let cdInitial = 165 * 60;
+    let cdRemaining = 165 * 60;
+    let cdRunning = false;
+    let cdLast = 0;
+
+    let swElapsed = 0;
+    let swRunning = false;
+    let swLast = 0;
+    let swLaps = [];
+
+    function formatTime(seconds) {
+      const s = Math.max(0, Math.floor(seconds));
+      return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60]
+        .map(x => String(x).padStart(2, "0"))
+        .join(":");
+    }
+
+    function paintTimers() {
+      document.getElementById("countdown-display").textContent = formatTime(cdRemaining);
+      document.getElementById("cd-toggle").textContent = cdRunning ? "Duraklat" : "Başlat";
+      document.getElementById("stopwatch-display").textContent = formatTime(swElapsed);
+      document.getElementById("sw-toggle").textContent = swRunning ? "Duraklat" : "Başlat";
+    }
+
+    function setCountdownPreset(mins, label) {
+      cdRunning = false;
+      cdInitial = mins * 60;
+      cdRemaining = mins * 60;
+      document.getElementById("countdown-label").textContent = label;
+      paintTimers();
+    }
+
+    function applyCustomCountdown(e) {
+      e.preventDefault();
+      const mins = Number(document.getElementById("custom-cd-min").value);
+      if (!Number.isFinite(mins) || mins < 1) return;
+      setCountdownPreset(mins, `Özel Geri Sayım (${mins} dk)`);
+      e.target.reset();
+    }
+
+    function toggleCountdown() {
+      cdRunning = !cdRunning;
+      cdLast = Date.now();
+      paintTimers();
+    }
+
+    function resetCountdown() {
+      cdRunning = false;
+      cdRemaining = cdInitial;
+      paintTimers();
+    }
+
+    function toggleStopwatch() {
+      swRunning = !swRunning;
+      swLast = Date.now();
+      paintTimers();
+    }
+
+    function lapStopwatch() {
+      if (swElapsed <= 0) return;
+      swLaps.push(formatTime(swElapsed));
+      document.getElementById("sw-laps").innerHTML = swLaps
+        .map((t, i) => `<span class="history-chip">Tur ${i + 1}: ${t}</span>`)
+        .join("");
+    }
+
+    function resetStopwatch() {
+      swRunning = false;
+      swElapsed = 0;
+      swLaps = [];
+      document.getElementById("sw-laps").innerHTML = "";
+      paintTimers();
+    }
+
+    setInterval(() => {
+      const now = Date.now();
+      if (cdRunning) {
+        const diff = Math.floor((now - cdLast) / 1000);
+        if (diff >= 1) {
+          cdLast += diff * 1000;
+          cdRemaining = Math.max(0, cdRemaining - diff);
+          if (cdRemaining === 0) cdRunning = false;
+          paintTimers();
+        }
+      }
+      if (swRunning) {
+        const diff = Math.floor((now - swLast) / 1000);
+        if (diff >= 1) {
+          swLast += diff * 1000;
+          swElapsed += diff;
+          paintTimers();
+        }
+      }
+    }, 250);
+
+    /* 03. Kişisel Net & Süre Grafikleri (Sadece Kendisi Görür) */
+    const CATEGORY_MAX_Q = {
+      "TYT Genel": 120,
+      "AYT Genel": 80,
+      "TYT Matematik": 40,
+      "TYT Türkçe": 40,
+      "TYT Sosyal": 20,
+      "TYT Fen": 20,
+      "AYT Matematik": 40,
+      "AYT Fen": 40,
+      "AYT Fizik": 14,
+      "AYT Kimya": 13,
+      "AYT Biyoloji": 13
+    };
+
+    let tytChart = null;
+    let aytChart = null;
+    let branchChart = null;
+
+    function updateMaxQuestionHint() {
+      const cat = document.getElementById("p-exam-cat").value;
+      const maxQ = CATEGORY_MAX_Q[cat] || 120;
+      document.getElementById("p-net-label").textContent = `Net (Maks. ${maxQ})`;
+      const netInput = document.getElementById("p-net");
+      netInput.max = String(maxQ);
+    }
+
+    document.getElementById("personal-result-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+
+      const name = document.getElementById("p-exam-name").value.trim();
+      const category = document.getElementById("p-exam-cat").value;
+      const maxQ = CATEGORY_MAX_Q[category] || 120;
+      const minutes = Number(document.getElementById("p-minutes").value);
+      const net = Number(document.getElementById("p-net").value);
+
+      if (!name || net < 0 || net > maxQ || minutes < 1) {
+        alert(`Lütfen 0 ile ${maxQ} arasında geçerli bir net girin.`);
+        return;
+      }
+
+      state.personalResults.push({
+        id: "pr-" + Date.now(),
+        user: u.nick,
+        name,
+        category,
+        maxQ,
+        minutes,
+        net,
+        createdAt: new Date().toISOString()
+      });
+      saveState();
+
+      if (category !== "TYT Genel" && category !== "AYT Genel") {
+        document.getElementById("branch-filter-select").value = category;
+      }
+
+      renderPersonalSection();
+      document.getElementById("p-form-msg").textContent = "Kişisel grafiğine kaydedildi (yalnızca sen görebilirsin).";
+      e.target.reset();
+      updateMaxQuestionHint();
+    });
+
+    function deletePersonalResult(id) {
+      const u = getActiveUser();
+      if (!u) return;
+      state.personalResults = state.personalResults.filter(r => !(r.id === id && r.user === u.nick));
+      saveState();
+      renderPersonalSection();
+    }
+
+    function renderPersonalSection() {
+      const u = getActiveUser();
+      const historyList = document.getElementById("personal-history-list");
+
+      if (!u) {
+        historyList.innerHTML = `<div class="empty">Kişisel deneme grafiklerini görmek için giriş yapmalısın.</div>`;
+        renderPersonalCharts();
+        return;
+      }
+
+      const mine = state.personalResults.filter(r => r.user === u.nick);
+      if (!mine.length) {
+        historyList.innerHTML = `<div class="empty">Henüz kişisel deneme sonucu eklemedin.</div>`;
+      } else {
+        historyList.innerHTML = [...mine].reverse().map(r => `
+          <div class="post-card" style="padding:11px 13px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div>
+              <strong>${escapeHtml(r.name)}</strong>
+              <div style="font-size:12px; color:var(--muted);">
+                ${escapeHtml(r.category)} · <strong>${r.net} / ${r.maxQ} net</strong> · ${r.minutes} dk
+              </div>
+            </div>
+            <button type="button" class="btn danger sm" onclick="deletePersonalResult('${escapeHtml(r.id)}')">Sil</button>
+          </div>
+        `).join("");
+      }
+
+      renderPersonalCharts();
+    }
+
+    function drawLineChart(canvasId, emptyId, oldChart, items, maxY, colorHex) {
+      const canvas = document.getElementById(canvasId);
+      const emptyEl = document.getElementById(emptyId);
+
+      if (!items.length) {
+        emptyEl.hidden = false;
+        canvas.hidden = true;
+        return oldChart;
+      }
+
+      emptyEl.hidden = true;
+      canvas.hidden = false;
+      if (oldChart) oldChart.destroy();
+
+      return new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: items.map(i => i.name),
+          datasets: [{
+            label: "Net",
+            data: items.map(i => i.net),
+            borderColor: colorHex,
+            backgroundColor: "rgba(213, 173, 132, 0.16)",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 5,
+            pointBackgroundColor: colorHex
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                afterLabel: (ctx) => {
+                  const row = items[ctx.dataIndex];
+                  return `Süre: ${row.minutes} dk (${row.net}/${maxY})`;
+                }
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, max: maxY },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderPersonalCharts() {
+      const u = getActiveUser();
+      const mine = u ? state.personalResults.filter(r => r.user === u.nick) : [];
+
+      const tytItems = mine.filter(r => r.category === "TYT Genel");
+      tytChart = drawLineChart("tyt-chart", "tyt-chart-empty", tytChart, tytItems, 120, "#3d6b5e");
+
+      const aytItems = mine.filter(r => r.category === "AYT Genel");
+      aytChart = drawLineChart("ayt-chart", "ayt-chart-empty", aytChart, aytItems, 80, "#ba653e");
+
+      const selectedBranch = document.getElementById("branch-filter-select").value;
+      const branchMax = CATEGORY_MAX_Q[selectedBranch] || 40;
+      document.getElementById("branch-chart-sub").textContent = `${selectedBranch} · ${branchMax} soru üzerinden gelişimin.`;
+      const branchItems = mine.filter(r => r.category === selectedBranch);
+      branchChart = drawLineChart("branch-chart", "branch-chart-empty", branchChart, branchItems, branchMax, "#d5ad84");
+    }
+
+    /* 04. Soru Duvarı */
+    document.getElementById("question-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+
+      const subject = document.getElementById("q-subject").value.trim();
+      const content = document.getElementById("q-content").value.trim();
+      const photoInput = document.getElementById("q-photo");
+
+      readImageAsDataURL(photoInput, (photoData) => {
+        state.questions.unshift({
+          id: "q-" + Date.now(),
+          nick: u.nick,
+          subject,
+          content,
+          photo: photoData,
+          likes: [],
+          comments: [],
+          createdAt: new Date().toISOString()
+        });
+        saveState();
+        renderQuestions();
+        e.target.reset();
+      });
+    });
+
+    function toggleQuestionLike(qId) {
+      const u = requireMember();
+      if (!u) return;
+      const q = state.questions.find(item => item.id === qId);
+      if (!q) return;
+      q.likes = q.likes || [];
+      const i = q.likes.indexOf(u.nick);
+      if (i >= 0) q.likes.splice(i, 1);
+      else q.likes.push(u.nick);
+      saveState();
+      renderQuestions();
+    }
+
+    function addQuestionComment(e, qId) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const input = document.getElementById("q-comm-" + qId);
+      const text = (input.value || "").trim();
+      if (!text) return;
+      const q = state.questions.find(item => item.id === qId);
+      if (!q) return;
+      q.comments = q.comments || [];
+      q.comments.push({ nick: u.nick, text });
+      saveState();
+      renderQuestions();
+    }
+
+    function renderQuestions() {
+      const listEl = document.getElementById("question-list");
+      const countEl = document.getElementById("question-count");
+      const activeUser = getActiveUser();
+
+      countEl.textContent = state.questions.length
+        ? `${state.questions.length} soru paylaşıldı`
+        : "Henüz soru paylaşılmadı.";
+
+      if (!state.questions.length) {
+        listEl.innerHTML = `<div class="empty">İlk soruyu sol taraftaki formdan galerinden görsel seçerek paylaşabilirsin.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = state.questions.map(q => {
+        const author = findProfileByNick(q.nick);
+        const likes = q.likes || [];
+        const comments = q.comments || [];
+        const liked = activeUser ? likes.includes(activeUser.nick) : false;
+
+        return `
+          <article class="post-card">
+            <div class="post-header">
+              <div class="post-author" onclick="openUserProfile('${escapeHtml(q.nick)}')">
+                <img src="${getUserAvatar(author, q.nick)}" alt="">
+                <div>
+                  <strong>@${escapeHtml(q.nick)}</strong>
+                  <div style="font-size:11.5px;color:var(--muted);">${new Date(q.createdAt).toLocaleDateString("tr-TR")}</div>
+                </div>
+              </div>
+              <span class="tag">${escapeHtml(q.subject)}</span>
+            </div>
+            ${q.photo ? `<img src="${q.photo}" class="post-photo" alt="Soru Görseli">` : ""}
+            <p style="margin:6px 0 0; white-space:pre-wrap; line-height:1.55;">${escapeHtml(q.content)}</p>
+            <div class="actions">
+              <button type="button" class="btn ${liked ? "primary" : "secondary"} sm" onclick="toggleQuestionLike('${escapeHtml(q.id)}')">
+                Beğen (${likes.length})
+              </button>
+              <button type="button" class="btn danger sm" onclick="openQuickReport('Soru Duvarı · ${escapeHtml(q.subject)} (@${escapeHtml(q.nick)})')">
+                Şikayet Et
+              </button>
+            </div>
+            <div class="comment-list">
+              ${comments.map(c => `<div class="comment-item"><strong style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(c.nick)}')">@${escapeHtml(c.nick)}:</strong> ${escapeHtml(c.text)}</div>`).join("")}
+              <form style="display:flex; gap:6px; margin-top:4px;" onsubmit="addQuestionComment(event, '${escapeHtml(q.id)}')">
+                <input id="q-comm-${escapeHtml(q.id)}" type="text" placeholder="Çözüm veya yorum yaz..." style="padding:8px 10px;font-size:13px;" required>
+                <button type="submit" class="btn secondary sm">Gönder</button>
+              </form>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    /* 05. Masa Paylaşımı (Beğeni + Yorum + Şikayet) */
+    document.getElementById("desk-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+
+      const caption = document.getElementById("desk-caption").value.trim();
+      const photoInput = document.getElementById("desk-photo");
+
+      readImageAsDataURL(photoInput, (photoData) => {
+        if (!photoData) {
+          alert("Lütfen galeriden bir masa fotoğrafı seçin.");
+          return;
+        }
+        state.desks.unshift({
+          id: "d-" + Date.now(),
+          nick: u.nick,
+          caption,
+          photo: photoData,
+          likes: [],
+          comments: [],
+          createdAt: new Date().toISOString()
+        });
+        saveState();
+        renderDesks();
+        e.target.reset();
+      });
+    });
+
+    function toggleDeskLike(dId) {
+      const u = requireMember();
+      if (!u) return;
+      const d = state.desks.find(item => item.id === dId);
+      if (!d) return;
+      d.likes = d.likes || [];
+      const i = d.likes.indexOf(u.nick);
+      if (i >= 0) d.likes.splice(i, 1);
+      else d.likes.push(u.nick);
+      saveState();
+      renderDesks();
+    }
+
+    function addDeskComment(e, dId) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const input = document.getElementById("d-comm-" + dId);
+      const text = (input.value || "").trim();
+      if (!text) return;
+      const d = state.desks.find(item => item.id === dId);
+      if (!d) return;
+      d.comments = d.comments || [];
+      d.comments.push({ nick: u.nick, text });
+      saveState();
+      renderDesks();
+    }
+
+    function renderDesks() {
+      const listEl = document.getElementById("desk-list");
+      const countEl = document.getElementById("desk-count");
+      const activeUser = getActiveUser();
+
+      countEl.textContent = state.desks.length
+        ? `${state.desks.length} masa paylaşımı`
+        : "Henüz masa fotoğrafı paylaşılmadı.";
+
+      if (!state.desks.length) {
+        listEl.innerHTML = `<div class="empty">Çalışma masanı galerinden seçerek ilk paylaşımı sen yapabilirsin.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = state.desks.map(d => {
+        const author = findProfileByNick(d.nick);
+        const likes = d.likes || [];
+        const comments = d.comments || [];
+        const liked = activeUser ? likes.includes(activeUser.nick) : false;
+
+        return `
+          <article class="post-card">
+            <div class="post-header">
+              <div class="post-author" onclick="openUserProfile('${escapeHtml(d.nick)}')">
+                <img src="${getUserAvatar(author, d.nick)}" alt="">
+                <div>
+                  <strong>@${escapeHtml(d.nick)}</strong>
+                  <div style="font-size:11.5px;color:var(--muted);">${new Date(d.createdAt).toLocaleDateString("tr-TR")}</div>
+                </div>
+              </div>
+              <span class="tag brans">${escapeHtml(author && author.target_department ? author.target_department : "İTÜ 2027")}</span>
+            </div>
+            <img src="${d.photo}" class="post-photo" alt="Çalışma Masası">
+            <p style="margin:6px 0 0; white-space:pre-wrap; line-height:1.55;">${escapeHtml(d.caption)}</p>
+            <div class="actions">
+              <button type="button" class="btn ${liked ? "primary" : "secondary"} sm" onclick="toggleDeskLike('${escapeHtml(d.id)}')">
+                Beğen (${likes.length})
+              </button>
+              <button type="button" class="btn danger sm" onclick="openQuickReport('Masa Paylaşımı (@${escapeHtml(d.nick)})')">
+                Şikayet Et
+              </button>
+            </div>
+            <div class="comment-list">
+              ${comments.map(c => `<div class="comment-item"><strong style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(c.nick)}')">@${escapeHtml(c.nick)}:</strong> ${escapeHtml(c.text)}</div>`).join("")}
+              <form style="display:flex; gap:6px; margin-top:4px;" onsubmit="addDeskComment(event, '${escapeHtml(d.id)}')">
+                <input id="d-comm-${escapeHtml(d.id)}" type="text" placeholder="Masaya yorum yaz..." style="padding:8px 10px;font-size:13px;" required>
+                <button type="submit" class="btn secondary sm">Gönder</button>
+              </form>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    /* 06. Sohbet & Tartışma Odası */
+    function sendChatMessage(e) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const input = document.getElementById("chat-input");
+      const text = input.value.trim();
+      if (!text) return;
+
+      state.chatMessages.push({
+        id: "m-" + Date.now(),
+        nick: u.nick,
+        text,
+        createdAt: new Date().toISOString()
+      });
+      if (state.chatMessages.length > 150) state.chatMessages.shift();
+      saveState();
+      input.value = "";
+      renderChat();
+    }
+
+    function renderChat() {
+      const box = document.getElementById("chat-box");
+      const activeUser = getActiveUser();
+
+      box.innerHTML = state.chatMessages.map(m => {
+        const member = findProfileByNick(m.nick);
+        const isMine = activeUser && activeUser.nick === m.nick;
+        return `
+          <div class="chat-msg ${isMine ? "mine" : ""}">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:4px;">
+              <div style="display:flex; align-items:center; gap:6px; cursor:pointer;" onclick="openUserProfile('${escapeHtml(m.nick)}')">
+                <img src="${getUserAvatar(member, m.nick)}" class="avatar-img" style="width:22px;height:22px;" alt="">
+                <strong style="font-size:12.5px;">@${escapeHtml(m.nick)}</strong>
+              </div>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <small style="color:var(--muted); font-size:11px;">${new Date(m.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</small>
+                ${m.nick !== "İTÜ 2027" ? `<button type="button" style="border:0;background:transparent;color:var(--danger);font-size:11px;padding:0;" onclick="openQuickReport('Sohbet Mesajı (@${escapeHtml(m.nick)}): ${escapeHtml(m.text.slice(0, 40))}')">Bildir</button>` : ""}
+              </div>
+            </div>
+            <div style="font-size:13.5px; line-height:1.45;">${escapeHtml(m.text)}</div>
+          </div>
+        `;
+      }).join("");
+      box.scrollTop = box.scrollHeight;
+    }
+
+    /* 07. HERKESE AÇIK PROFİL VE ÜYELER REHBERİ (SUPABASE PROFILES) */
+    function renderProfilePage() {
+      const container = document.getElementById("profile-container");
+      const activeUser = getActiveUser();
+      const targetNick = viewedProfileNick || (activeUser && activeUser.nick) || (allProfiles[0] && allProfiles[0].username);
+
+      const directoryHtml = `
+        <div class="panel" style="margin-top:20px;">
+          <h3>Kayıtlı Tüm Üyeler (${allProfiles.length})</h3>
+          <p class="panel-sub">Herhangi bir üyenin kartına tıklayarak profilini ve paylaşımlarını görüntüleyebilirsin.</p>
+          ${allProfiles.length ? `
+            <div class="member-grid">
+              ${allProfiles.map(p => `
+                <div class="member-card" onclick="openUserProfile('${escapeHtml(p.username)}')">
+                  <img src="${getUserAvatar(p, p.username)}" alt="@${escapeHtml(p.username)}">
+                  <div style="min-width:0;">
+                    <strong style="display:block; overflow:hidden; text-overflow:ellipsis;">@${escapeHtml(p.username)}</strong>
+                    <span class="tag brans" style="margin-top:4px;">${escapeHtml(p.target_department || "İTÜ 2027")}</span>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          ` : `<div class="empty">Henüz kayıtlı üye bulunmuyor. İlk üyeliği sen oluşturabilirsin!</div>`}
+        </div>
+      `;
+
+      if (!targetNick) {
+        container.innerHTML = directoryHtml;
+        return;
+      }
+
+      const member = findProfileByNick(targetNick);
+      if (!member) {
+        container.innerHTML = `<div class="panel"><p>Üye profili bulunamadı.</p></div>` + directoryHtml;
+        return;
+      }
+
+      const isOwn = activeUser && activeUser.nick === member.username;
+      const userDesks = state.desks.filter(d => d.nick === member.username);
+      const userQuestions = state.questions.filter(q => q.nick === member.username);
+      const joinedExamsCount = state.exams.filter(ex => (ex.participants || []).includes(member.username)).length;
+
+      container.innerHTML = `
+        <div class="panel">
+          <div class="profile-banner">
+            <img src="${getUserAvatar(member, member.username)}" class="profile-big-avatar" alt="@${escapeHtml(member.username)}">
+            <div style="flex:1; min-width:200px;">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <h3 style="margin:0; font-size:22px;">@${escapeHtml(member.username)}</h3>
+                <span class="tag brans">${escapeHtml(member.target_department || "İTÜ 2027")}</span>
+              </div>
+              <p style="margin:6px 0 0; color:var(--muted); font-size:13.5px;">${escapeHtml(member.bio || "İTÜ 2027 hedefiyle çalışıyor.")}</p>
+              <div class="profile-stats">
+                <span><strong>${userDesks.length}</strong> Masa</span>
+                <span><strong>${userQuestions.length}</strong> Soru</span>
+                <span><strong>${joinedExamsCount}</strong> Deneme</span>
+              </div>
+            </div>
+            <div class="actions" style="margin-top:0;">
+              ${isOwn
+                ? `<button type="button" class="btn primary" onclick="openSection('#ayarlar')">Profili Düzenle (Ayarlar)</button>`
+                : `<button type="button" class="btn danger sm" onclick="openQuickReport('Üye Profili (@${escapeHtml(member.username)})')">Kullanıcıyı Şikayet Et</button>`}
+            </div>
+          </div>
+
+          <h3 style="margin-bottom:14px;">Paylaşılan Çalışma Masaları (${userDesks.length})</h3>
+          ${userDesks.length ? `
+            <div class="insta-grid">
+              ${userDesks.map(d => `
+                <div class="insta-tile">
+                  <img src="${d.photo}" alt="Çalışma Masası">
+                  <div class="insta-tile-cap">${escapeHtml(d.caption)}</div>
+                </div>
+              `).join("")}
+            </div>
+          ` : `<div class="empty">Henüz masa fotoğrafı paylaşılmamış.</div>`}
+        </div>
+        ${directoryHtml}
+      `;
+    }
+
+    /* 08. Ayarlar (Supabase RLS ile Sadece Kendi Profilini Güncelleme) & Talep / Şikayet */
+    function renderSettingsPage() {
+      const container = document.getElementById("settings-container");
+      const u = getActiveUser();
+
+      if (!u) {
+        container.innerHTML = `
+          <div class="panel">
+            <h3>Üye Girişi Gerekli</h3>
+            <p class="panel-sub">Hesap ayarlarını düzenlemek veya talep/şikayet göndermek için giriş yapmalısın.</p>
+            <button type="button" class="btn primary" onclick="openAuthModal('login')">Giriş Yap / Kayıt Ol</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="two-col-even">
+          <div class="panel">
+            <h3>Profil ve Avatar Ayarları</h3>
+            <p class="panel-sub">Kullanıcı adı: <strong>@${escapeHtml(u.nick)}</strong> · E-posta: <strong>${escapeHtml(u.email)}</strong></p>
+            <img src="${getUserAvatar(u)}" class="profile-big-avatar" style="width:68px;height:68px;margin-bottom:12px;" alt="">
+            <form onsubmit="saveUserSettings(event)">
+              <div class="field">
+                <label for="set-target">Hedef İTÜ Bölümü</label>
+                <input id="set-target" type="text" value="${escapeHtml(u.target || "")}" required>
+              </div>
+              <div class="field">
+                <label for="set-bio">Profil Açıklaması (Bio)</label>
+                <input id="set-bio" type="text" value="${escapeHtml(u.bio || "")}" placeholder="Kısa hedef notun...">
+              </div>
+              <div class="field">
+                <label for="set-avatar-file">Galeriden Yeni Fotoğraf Seç</label>
+                <input id="set-avatar-file" type="file" accept="image/*">
+              </div>
+              <div class="field">
+                <label>Veya İTÜ Özel Avatarı Seç</label>
+                <div class="avatar-picker-grid">
+                  ${ITU_AVATARS.map(av => `
+                    <button type="button" class="avatar-opt" onclick="applyPresetToUser('${av.id}')">
+                      <img src="${av.uri}" alt="${escapeHtml(av.label)}">
+                      <span>${escapeHtml(av.label)}</span>
+                    </button>
+                  `).join("")}
+                </div>
+              </div>
+              <button type="submit" class="btn primary save">Değişiklikleri Kaydet</button>
+              <p id="set-msg" class="message"></p>
+            </form>
+          </div>
+
+          <div class="panel">
+            <h3>Talep, Öneri ve Şikayet Bildirimi</h3>
+            <p class="panel-sub">Kulüp yönetimiyle paylaşmak istediğin her türlü talep, öneri veya şikayeti buradan iletebilirsin.</p>
+            <form onsubmit="submitFeedbackForm(event)">
+              <div class="field">
+                <label for="fb-type">Bildirim Türü</label>
+                <select id="fb-type">
+                  <option value="Talep / Öneri">Talep / Öneri</option>
+                  <option value="Şikayet">Şikayet</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="fb-text">Açıklama</label>
+                <textarea id="fb-text" placeholder="Mesajınızı detaylı şekilde yazın..." required></textarea>
+              </div>
+              <button type="submit" class="btn primary save">Yönetime Gönder</button>
+              <p id="fb-msg" class="message"></p>
+            </form>
+          </div>
+        </div>
+      `;
+    }
+
+    async function applyPresetToUser(presetId) {
+      const u = requireMember();
+      if (!u) return;
+      const found = ITU_AVATARS.find(a => a.id === presetId);
+      if (!found) return;
+
+      const { error } = await sb
+        .from("profiles")
+        .update({ avatar_url: found.uri })
+        .eq("id", u.id);
+
+      if (error) {
+        alert("Avatar güncellenemedi: " + error.message);
+        return;
+      }
+
+      await syncSupabaseSession();
+      renderSettingsPage();
+      document.getElementById("set-msg").textContent = "İTÜ avatarınız Supabase profilinize kaydedildi.";
+    }
+
+    function saveUserSettings(e) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const target = document.getElementById("set-target").value.trim();
+      const bio = document.getElementById("set-bio").value.trim();
+      const fileInput = document.getElementById("set-avatar-file");
+
+      readImageAsDataURL(fileInput, async (uploaded) => {
+        const updates = {
+          target_department: target,
+          bio
+        };
+        if (uploaded) updates.avatar_url = uploaded;
+
+        const { error } = await sb
+          .from("profiles")
+          .update(updates)
+          .eq("id", u.id);
+
+        if (error) {
+          alert("Profil güncellenirken hata oluştu: " + error.message);
+          return;
+        }
+
+        await syncSupabaseSession();
+        renderSettingsPage();
+        document.getElementById("set-msg").textContent = "Profil ayarlarınız kaydedildi.";
+      });
+    }
+
+    function submitFeedbackForm(e) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const type = document.getElementById("fb-type").value;
+      const text = document.getElementById("fb-text").value.trim();
+      if (!text) return;
+
+      state.feedbacks.unshift({
+        id: "fb-" + Date.now(),
+        from: u.nick,
+        type,
+        text,
+        createdAt: new Date().toISOString()
+      });
+      saveState();
+      e.target.reset();
+      document.getElementById("fb-msg").textContent = "Bildiriminiz yönetici paneline iletildi.";
+    }
+
+    function openQuickReport(subjectInfo) {
+      const u = requireMember();
+      if (!u) return;
+      document.getElementById("info-modal-title").textContent = "Şikayet / Bildirim Gönder";
+      document.getElementById("info-modal-body").innerHTML = `
+        <form onsubmit="submitQuickReport(event, '${escapeHtml(subjectInfo)}')">
+          <p class="panel-sub" style="margin-bottom:10px;">İlgili kayıt: <strong>${escapeHtml(subjectInfo)}</strong></p>
+          <div class="field">
+            <label for="qr-desc">Şikayet veya Talep Açıklaması</label>
+            <textarea id="qr-desc" placeholder="Detayları yazın..." required></textarea>
+          </div>
+          <button type="submit" class="btn danger save">Yönetime İlet</button>
+        </form>
+      `;
+      document.getElementById("info-modal").classList.add("open");
+    }
+
+    function submitQuickReport(e, subjectInfo) {
+      e.preventDefault();
+      const u = requireMember();
+      if (!u) return;
+      const desc = document.getElementById("qr-desc").value.trim();
+      state.feedbacks.unshift({
+        id: "fb-" + Date.now(),
+        from: u.nick,
+        type: "Şikayet",
+        text: `[${subjectInfo}] ${desc}`,
+        createdAt: new Date().toISOString()
+      });
+      saveState();
+      closeInfoModal();
+      alert("Bildiriminiz yönetici paneline iletildi.");
+    }
+
+    /* Yönetici Paneli */
+    let activeAdminTab = "feedbacks";
+
+    function setAdminTab(tab) {
+      activeAdminTab = tab;
+      renderAdminPanel();
+    }
+
+    function renderAdminPanel() {
+      const container = document.getElementById("admin-container");
+      if (!isAdmin()) {
+        container.innerHTML = `<div class="panel"><p>Bu alana erişim yetkiniz bulunmuyor.</p></div>`;
+        return;
+      }
+
+      const tabsHtml = `
+        <div class="admin-tabs">
+          <button type="button" class="tab-btn ${activeAdminTab === "feedbacks" ? "active" : ""}" onclick="setAdminTab('feedbacks')">
+            Şikayetler ve Talepler (${state.feedbacks.length})
+          </button>
+          <button type="button" class="tab-btn ${activeAdminTab === "participants" ? "active" : ""}" onclick="setAdminTab('participants')">
+            Deneme Katılımcıları
+          </button>
+          <button type="button" class="tab-btn ${activeAdminTab === "exams" ? "active" : ""}" onclick="setAdminTab('exams')">
+            Deneme Ekle / Yönet
+          </button>
+          <button type="button" class="tab-btn ${activeAdminTab === "members" ? "active" : ""}" onclick="setAdminTab('members')">
+            Kayıtlı Üyeler (${allProfiles.length})
+          </button>
+        </div>
+      `;
+
+      let tabBody = "";
+
+      if (activeAdminTab === "feedbacks") {
+        tabBody = `
+          <div class="panel">
+            <h3>Gelen Şikayetler ve Talepler</h3>
+            <p class="panel-sub">Her bölümden gelen tüm şikayet, talep ve öneriler burada toplanır.</p>
+            ${state.feedbacks.length ? state.feedbacks.map(fb => `
+              <div class="post-card" style="margin-bottom:10px;">
+                <div class="post-header">
+                  <div>
+                    <span class="tag ${fb.type === "Şikayet" ? "ayt" : "brans"}">${escapeHtml(fb.type)}</span>
+                    <strong style="margin-left:8px; cursor:pointer;" onclick="openUserProfile('${escapeHtml(fb.from)}')">@${escapeHtml(fb.from)}</strong>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    <small style="color:var(--muted);">${new Date(fb.createdAt).toLocaleString("tr-TR")}</small>
+                    <button type="button" class="btn secondary sm" onclick="deleteFeedback('${escapeHtml(fb.id)}')">Çözüldü / Sil</button>
+                  </div>
+                </div>
+                <p style="margin:6px 0 0;white-space:pre-wrap;">${escapeHtml(fb.text)}</p>
+              </div>
+            `).join("") : `<div class="empty">Henüz gelen şikayet veya talep bulunmuyor.</div>`}
+          </div>
+        `;
+      } else if (activeAdminTab === "participants") {
+        tabBody = `
+          <div class="panel">
+            <h3>Denemelere Katılan Adaylar</h3>
+            ${state.exams.map(ex => {
+              const list = ex.participants || [];
+              return `
+                <div class="post-card" style="margin-bottom:12px;">
+                  <div class="post-header">
+                    <strong>${escapeHtml(ex.name)} (${escapeHtml(ex.type)})</strong>
+                    <span class="tag">${list.length} Katılımcı</span>
+                  </div>
+                  ${list.length ? `
+                    <div class="history" style="margin-top:8px;">
+                      ${list.map(nick => `<span class="history-chip" style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(nick)}')">@${escapeHtml(nick)}</span>`).join("")}
+                    </div>
+                  ` : `<p style="font-size:13px;color:var(--muted);margin:4px 0 0;">Henüz katılımcı yok.</p>`}
+                </div>
+              `;
+            }).join("")}
+          </div>
+        `;
+      } else if (activeAdminTab === "exams") {
+        tabBody = `
+          <div class="two-col">
+            <div class="panel">
+              <h3>Yeni Ortak Deneme Ekle</h3>
+              <form onsubmit="adminAddExam(event)">
+                <div class="field">
+                  <label for="adm-ex-name">Deneme Adı</label>
+                  <input id="adm-ex-name" type="text" placeholder="Örn. TYT Genel Deneme 02" required>
+                </div>
+                <div class="field-row">
+                  <div class="field">
+                    <label for="adm-ex-type">Tür</label>
+                    <select id="adm-ex-type">
+                      <option value="TYT">TYT (120 Soru)</option>
+                      <option value="AYT">AYT (80 Soru)</option>
+                      <option value="BRANŞ">BRANŞ (40 Soru)</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label for="adm-ex-date">Tarih</label>
+                    <input id="adm-ex-date" type="date" required>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="adm-ex-pdf">PDF Linki (İsteğe bağlı)</label>
+                  <input id="adm-ex-pdf" type="url" placeholder="https://...">
+                </div>
+                <div class="field">
+                  <label for="adm-ex-video">Çözüm Linki (İsteğe bağlı)</label>
+                  <input id="adm-ex-video" type="url" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn primary save">Denemeyi Takvime Ekle</button>
+              </form>
+            </div>
+
+            <div class="panel">
+              <h3>Mevcut Ortak Denemeler</h3>
+              ${state.exams.map(ex => `
+                <div class="post-card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                  <div>
+                    <strong>${escapeHtml(ex.name)}</strong>
+                    <div style="font-size:12px;color:var(--muted);">${escapeHtml(ex.date)} · ${(ex.participants || []).length} katılımcı · ${(ex.scores || []).length} net</div>
+                  </div>
+                  <button type="button" class="btn danger sm" onclick="adminDeleteExam('${escapeHtml(ex.id)}')">Sil</button>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        `;
+      } else if (activeAdminTab === "members") {
+        tabBody = `
+          <div class="panel">
+            <h3>Supabase Kayıtlı Üyeler</h3>
+            ${allProfiles.map(member => `
+              <div class="post-card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="openUserProfile('${escapeHtml(member.username)}')">
+                  <img src="${getUserAvatar(member, member.username)}" class="avatar-img" alt="">
+                  <div>
+                    <strong>@${escapeHtml(member.username)}</strong>
+                    <div style="font-size:12px;color:var(--muted);">${escapeHtml(member.target_department || "İTÜ 2027")}</div>
+                  </div>
+                </div>
+                <div>
+                  ${member.username === ADMIN_NICK ? `<span class="tag admin">Yönetici</span>` : `<span class="tag">Üye</span>`}
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      }
+
+      container.innerHTML = tabsHtml + tabBody;
+    }
+
+    function deleteFeedback(fbId) {
+      if (!isAdmin()) return;
+      state.feedbacks = state.feedbacks.filter(f => f.id !== fbId);
+      saveState();
+      renderAdminPanel();
+    }
+
+    function adminAddExam(e) {
+      e.preventDefault();
+      if (!isAdmin()) return;
+      const type = document.getElementById("adm-ex-type").value;
+      const maxQ = type === "AYT" ? 80 : type === "BRANŞ" ? 40 : 120;
+      state.exams.push({
+        id: "ex-" + Date.now(),
+        name: document.getElementById("adm-ex-name").value.trim(),
+        type,
+        maxQ,
+        date: document.getElementById("adm-ex-date").value,
+        pdfUrl: document.getElementById("adm-ex-pdf").value.trim(),
+        videoUrl: document.getElementById("adm-ex-video").value.trim(),
+        participants: [],
+        scores: []
+      });
+      saveState();
+      renderExams();
+      renderAdminPanel();
+    }
+
+    function adminDeleteExam(exId) {
+      if (!isAdmin()) return;
+      state.exams = state.exams.filter(ex => ex.id !== exId);
+      saveState();
+      renderExams();
+      renderAdminPanel();
+    }
+
+    /* Random Motivation Quote on Load */
+    const pickQ = MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)];
+    document.getElementById("motive-quote").textContent = pickQ.q;
+    document.getElementById("motive-sub").textContent = pickQ.s;
+
+    /* Initial Boot */
+    lucide.createIcons();
+    syncSupabaseSession();
+  </script>
+</body>
+</html>
