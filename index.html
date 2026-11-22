@@ -1031,6 +1031,30 @@
         width: min(260px, calc(100vw - 28px));
       }
     }
+
+    @media (max-width: 480px) {
+      .top-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        width: 100%;
+      }
+      .top-actions > *, #auth-header-slot > * {
+        min-width: 0;
+        width: 100%;
+      }
+      .top-actions .btn {
+        white-space: normal;
+        min-height: 40px;
+      }
+      .menu-wrap {
+        width: 100%;
+      }
+      .menu-panel {
+        right: 0;
+        max-width: calc(100vw - 28px);
+      }
+    }
   </style>
 </head>
 <body>
@@ -1138,7 +1162,7 @@
           <div class="kicker">01 / Ortak Takvim</div>
           <h2 id="takvim-baslik">Grup ortak deneme tarihleri</h2>
         </div>
-        <p>Denemelere katılacağını işaretle, genel deneme netini girerek haftalık sıralamadaki yerini gör.</p>
+        <p>TYT ve AYT genel denemelerinde ders netlerini ayrı gir; toplam netin otomatik hesaplansın ve sıralamada görünsün.</p>
       </div>
 
       <div id="exam-cards" class="cards"></div>
@@ -1148,7 +1172,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px;">
           <div>
             <h3 style="margin:0;">Haftalık Ortak Deneme Sıralaması</h3>
-            <p class="panel-sub" style="margin:4px 0 0;">Yönetici tarafından eklenen ortak denemelerde adayların net sıralaması.</p>
+            <p class="panel-sub" style="margin:4px 0 0;">Toplam nete göre sıralama; TYT/AYT ders netleri de adayların yanında görünür.</p>
           </div>
           <div style="min-width:220px;">
             <select id="ranking-exam-select" onchange="renderRankingTable()"></select>
@@ -1215,13 +1239,13 @@
           <div class="kicker">03 / Kişisel Analiz</div>
           <h2 id="gelisim-baslik">Kişisel Net & Süre Grafiklerim</h2>
         </div>
-        <p>Kendi çözdüğün denemelerin adını yazarak net ve süre takibini yap. Bu verileri yalnızca sen görebilirsin.</p>
+        <p>TYT ve AYT genel denemelerinde her dersin netini ayrı kaydet. Toplam ve süre takibin yalnızca sana görünür.</p>
       </div>
 
       <div class="track-grid" style="margin-bottom:20px;">
         <div class="panel">
           <h3>Kişisel Deneme Ekle</h3>
-          <p class="panel-sub">Deneme türünü seçtiğinde maksimum soru sayısı otomatik belirlenir.</p>
+          <p class="panel-sub">TYT/AYT genelde ders netlerini ayrı gir; toplam otomatik hesaplanır. Diğer türlerde tek net gir.</p>
           <form id="personal-result-form">
             <div class="field">
               <label for="p-exam-name">Çözdüğün Denemenin Adı</label>
@@ -1243,6 +1267,7 @@
                 <option value="AYT Biyoloji" data-max="13">AYT Biyoloji (13 Soru)</option>
               </select>
             </div>
+            <div id="p-subject-fields" class="field" hidden></div>
             <div class="field-row">
               <div class="field">
                 <label for="p-minutes">Süre (dakika)</label>
@@ -1269,7 +1294,7 @@
       <div class="cards">
         <div class="panel">
           <h3>TYT Genel Grafiği (120 Soru)</h3>
-          <p class="panel-sub">0 - 120 net ölçeğinde TYT gelişimin.</p>
+          <p class="panel-sub">Toplam net grafiği; noktaya dokunarak ders netlerini gör.</p>
           <div class="chart-wrap">
             <div id="tyt-chart-empty" class="empty">Henüz TYT genel sonucu girilmedi.</div>
             <canvas id="tyt-chart" hidden></canvas>
@@ -1278,7 +1303,7 @@
 
         <div class="panel">
           <h3>AYT Genel Grafiği (80 Soru)</h3>
-          <p class="panel-sub">0 - 80 net ölçeğinde AYT gelişimin.</p>
+          <p class="panel-sub">Toplam net grafiği; noktaya dokunarak ders netlerini gör.</p>
           <div class="chart-wrap">
             <div id="ayt-chart-empty" class="empty">Henüz AYT genel sonucu girilmedi.</div>
             <canvas id="ayt-chart" hidden></canvas>
@@ -1473,8 +1498,8 @@
 
       <form id="login-form">
         <div class="field">
-          <label for="login-email">E-posta Adresi veya Kullanıcı Adı (@nick)</label>
-          <input id="login-email" type="text" placeholder="E-posta adresiniz veya kullanıcı adınız" required>
+          <label for="login-email">E-posta adresi veya kullanıcı adı</label>
+          <input id="login-email" type="text" placeholder="E-posta, kullanıcı adı veya @kullanıcıadı" autocomplete="username" required>
         </div>
         <div class="field">
           <label for="login-pass">Şifre</label>
@@ -1490,8 +1515,8 @@
           <input id="reg-nick" type="text" placeholder="Örn. ari2027" required>
         </div>
         <div class="field">
-          <label for="reg-email">E-posta Adresi (İsteğe bağlı — boşsa nick üzerinden oluşturulur)</label>
-          <input id="reg-email" type="email" placeholder="ornek@gmail.com">
+          <label for="reg-email">E-posta Adresi</label>
+          <input id="reg-email" type="email" placeholder="ornek@gmail.com" required>
         </div>
         <div class="field">
           <label for="reg-target">Hedef İTÜ Bölümü</label>
@@ -1532,11 +1557,13 @@
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const STORAGE_KEY = "itu2027_platform_state_v4";
-    const ADMIN_NICK = "wizard";
-
     let currentSessionUser = null; // Supabase auth user objesi
     let currentProfile = null;     // Aktif kullanıcının Supabase profiles satırı
     let allProfiles = [];          // Herkesin görebileceği tüm profiller dizisi
+    let cloudRecords = new Map();
+    let cloudReady = false;
+    let cloudSyncQueue = Promise.resolve();
+    let sessionSyncInFlight = null;
 
     /* İTÜ Özel Varsayılan SVG Avatarlar */
     const ITU_AVATARS = [
@@ -1653,12 +1680,35 @@
       }
     }
 
-    let state = loadState();
-    let selectedRegAvatar = ITU_AVATARS[0].uri;
+    let legacyState = loadState();
+    let state = structuredClone(legacyState);
+    let selectedRegAvatar = null;
     let viewedProfileNick = null;
 
     function saveState() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        console.error("Yerel yedek kaydedilemedi:", error);
+        alert("Tarayıcıdaki yerel yedek alanı dolu olabilir. Sunucu kaydı ayrıca denenecek; lütfen fotoğraf paylaşımını tekrar deneyin.");
+      }
+      legacyState = structuredClone(state);
+      if (!cloudReady || !currentSessionUser) return Promise.resolve(true);
+      cloudSyncQueue = cloudSyncQueue
+        .then(syncCloudRecords)
+        .catch((error) => {
+          alert("Değişiklik bu cihazda korundu ancak Supabase'e kaydedilemedi. İnternet/SQL ayarlarını kontrol edip tekrar deneyin.\n\n" + error.message);
+          return false;
+        });
+      return cloudSyncQueue;
+    }
+
+    function stableJson(value) {
+      if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+      if (value && typeof value === "object") {
+        return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableJson(value[key])}`).join(",")}}`;
+      }
+      return JSON.stringify(value);
     }
 
     function escapeHtml(text) {
@@ -1688,13 +1738,17 @@
 
     function isAdmin() {
       const u = getActiveUser();
-      return Boolean(u && u.nick === ADMIN_NICK && !u.banned);
+      return Boolean(cloudReady && u && currentProfile && currentProfile.is_admin && !u.banned);
     }
 
     function requireMember() {
       const u = getActiveUser();
       if (!u) {
         openAuthModal("login");
+        return null;
+      }
+      if (!cloudReady) {
+        alert("Supabase bağlantısı hazır değil. Kaydınızın kaybolmaması için bağlantı ve veritabanı kurulumunu kontrol edip sayfayı yenileyin.");
         return null;
       }
       if (u.banned) {
@@ -1708,68 +1762,346 @@
     async function fetchAllProfiles() {
       const { data, error } = await sb
         .from("profiles")
-        .select("*")
+        .select("id,username,target_department,bio,avatar_url,banned,is_admin,created_at")
         .order("created_at", { ascending: false });
 
-      if (!error && Array.isArray(data)) {
-        allProfiles = data;
+      if (error) throw error;
+      allProfiles = Array.isArray(data) ? data : [];
+    }
+
+    function profileIdForNick(nick) {
+      const clean = normalizeNick(nick);
+      const profile = allProfiles.find(item => normalizeNick(item.username) === clean);
+      if (profile) return profile.id;
+      return currentProfile && normalizeNick(currentProfile.username) === clean ? currentProfile.id : null;
+    }
+
+    function hydrateCloudRecords(records) {
+      const exams = [];
+      const personalResults = [];
+      const questions = [];
+      const desks = [];
+      const chatMessages = [];
+      const feedbacks = [];
+      const byId = new Map();
+
+      records.forEach((record) => {
+        if (record.kind === "exam") {
+          const exam = { ...record.payload, id: record.id, participants: [], scores: [], _ownerId: record.owner_id };
+          exams.push(exam);
+          byId.set(record.id, exam);
+        }
+      });
+
+      records.forEach((record) => {
+        const payload = { ...record.payload, id: record.id, _ownerId: record.owner_id };
+        const parent = byId.get(record.target_id);
+        if (record.kind === "participant" && parent) parent.participants.push(payload.nick);
+        if (record.kind === "score" && parent) {
+          const { id: ignoredId, ...score } = payload;
+          parent.scores.push({ ...score, _ownerId: record.owner_id });
+        }
+        if (record.kind === "personal_result") personalResults.push({ ...payload, user: payload.user || (currentProfile && currentProfile.username) });
+        if (record.kind === "question") questions.push({ ...payload, likes: [], comments: [] });
+        if (record.kind === "desk") desks.push({ ...payload, likes: [], comments: [] });
+        if (record.kind === "chat") chatMessages.push(payload);
+        if (record.kind === "feedback") feedbacks.push({ ...payload, from: payload.from || payload.nick });
+      });
+
+      const questionById = new Map(questions.map(item => [item.id, item]));
+      const deskById = new Map(desks.map(item => [item.id, item]));
+      records.forEach((record) => {
+        const payload = { ...record.payload, id: record.id, _ownerId: record.owner_id };
+        if (record.kind === "question_like") {
+          const parent = questionById.get(record.target_id);
+          if (parent) parent.likes.push(payload.nick);
+        } else if (record.kind === "desk_like") {
+          const parent = deskById.get(record.target_id);
+          if (parent) parent.likes.push(payload.nick);
+        } else if (record.kind === "question_comment") {
+          const parent = questionById.get(record.target_id);
+          if (parent) parent.comments.push(payload);
+        } else if (record.kind === "desk_comment") {
+          const parent = deskById.get(record.target_id);
+          if (parent) parent.comments.push(payload);
+        }
+      });
+      questions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      desks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      return {
+        exams,
+        personalResults,
+        questions,
+        desks,
+        chatMessages: chatMessages.length ? chatMessages : structuredClone(DEFAULT_STATE.chatMessages),
+        feedbacks
+      };
+    }
+
+    function stateToCloudRecords() {
+      const rows = [];
+      const add = (id, kind, ownerId, targetId, payload, visibility) => {
+        if (!ownerId && kind !== "exam") return;
+        const previous = cloudRecords.get(id);
+        rows.push({
+          id,
+          kind,
+          owner_id: ownerId || (previous && previous.owner_id) || null,
+          target_id: targetId || null,
+          visibility: visibility || "public",
+          payload
+        });
+      };
+      state.exams.forEach((exam) => {
+        const prior = cloudRecords.get(exam.id);
+        const ownerId = exam._ownerId !== undefined
+          ? exam._ownerId
+          : prior
+            ? prior.owner_id
+            : currentSessionUser && currentSessionUser.id;
+        const { id, participants = [], scores = [], _ownerId, ...payload } = exam;
+        add(id, "exam", ownerId, null, payload);
+        participants.forEach((nick) => {
+          const userId = profileIdForNick(nick);
+          if (userId) add(`participant:${id}:${userId}`, "participant", userId, id, { nick });
+        });
+        scores.forEach((score) => {
+          const userId = score._ownerId || profileIdForNick(score.nick);
+          if (userId) {
+            const { _ownerId: ignoredOwnerId, ...scorePayload } = score;
+            add(`score:${id}:${userId}`, "score", userId, id, scorePayload);
+          }
+        });
+      });
+      state.personalResults.forEach((item) => {
+        const { _ownerId, ...payload } = item;
+        add(item.id, "personal_result", _ownerId || (currentSessionUser && currentSessionUser.id), null, payload, "private");
+      });
+      state.questions.forEach((item) => {
+        const { likes = [], comments = [], _ownerId, ...payload } = item;
+        const ownerId = _ownerId || profileIdForNick(item.nick);
+        add(item.id, "question", ownerId, null, payload);
+        likes.forEach((nick) => {
+          const userId = profileIdForNick(nick);
+          if (userId) add(`question-like:${item.id}:${userId}`, "question_like", userId, item.id, { nick });
+        });
+        comments.forEach((comment, index) => {
+          const userId = comment._ownerId || profileIdForNick(comment.nick);
+          const commentId = comment.id || `question-comment:${item.id}:${userId}:${index}`;
+          if (userId) {
+            const { _ownerId: ignoredOwnerId, ...commentPayload } = comment;
+            add(commentId, "question_comment", userId, item.id, commentPayload);
+          }
+        });
+      });
+      state.desks.forEach((item) => {
+        const { likes = [], comments = [], _ownerId, ...payload } = item;
+        const ownerId = _ownerId || profileIdForNick(item.nick);
+        add(item.id, "desk", ownerId, null, payload);
+        likes.forEach((nick) => {
+          const userId = profileIdForNick(nick);
+          if (userId) add(`desk-like:${item.id}:${userId}`, "desk_like", userId, item.id, { nick });
+        });
+        comments.forEach((comment, index) => {
+          const userId = comment._ownerId || profileIdForNick(comment.nick);
+          const commentId = comment.id || `desk-comment:${item.id}:${userId}:${index}`;
+          if (userId) {
+            const { _ownerId: ignoredOwnerId, ...commentPayload } = comment;
+            add(commentId, "desk_comment", userId, item.id, commentPayload);
+          }
+        });
+      });
+      state.chatMessages.forEach((item) => {
+        const ownerId = item._ownerId || profileIdForNick(item.nick);
+        const { _ownerId, ...payload } = item;
+        add(item.id, "chat", ownerId, null, payload);
+      });
+      state.feedbacks.forEach((item) => {
+        const ownerId = item._ownerId || profileIdForNick(item.from);
+        const { _ownerId, ...payload } = item;
+        add(item.id, "feedback", ownerId, null, payload, "private");
+      });
+      return rows;
+    }
+
+    async function syncCloudRecords() {
+      if (!currentSessionUser || !cloudReady) return true;
+      const desired = stateToCloudRecords();
+      const desiredIds = new Set(desired.map(item => item.id));
+      for (const row of desired) {
+        const previous = cloudRecords.get(row.id);
+        const changed = !previous || previous.kind !== row.kind ||
+          previous.owner_id !== row.owner_id || previous.target_id !== row.target_id ||
+          previous.visibility !== row.visibility ||
+          stableJson(previous.payload) !== stableJson(row.payload);
+        if (!changed) continue;
+        const { error } = await sb.from("club_records").upsert(row, { onConflict: "id" });
+        if (error) throw error;
+        cloudRecords.set(row.id, { ...row });
       }
+
+      const removedIds = [...cloudRecords.values()]
+        .filter(row => !desiredIds.has(row.id) &&
+          (row.owner_id === currentSessionUser.id || isAdmin()))
+        .map(row => row.id);
+      if (removedIds.length) {
+        const { error } = await sb.from("club_records").delete().in("id", removedIds);
+        if (error) throw error;
+        removedIds.forEach(id => cloudRecords.delete(id));
+      }
+      return true;
+    }
+
+    async function fetchCloudRecords() {
+      const { data, error } = await sb
+        .from("club_records")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      const records = Array.isArray(data) ? data : [];
+      cloudRecords = new Map(records.map(row => [row.id, row]));
+      state = { ...structuredClone(DEFAULT_STATE), ...hydrateCloudRecords(records) };
+    }
+
+    function mergeLegacyOwnData(legacy) {
+      const ownNick = currentProfile && normalizeNick(currentProfile.username);
+      if (!ownNick) return;
+      const containsId = list => new Set(list.map(item => item.id));
+      let ids = containsId(state.personalResults);
+      (legacy.personalResults || []).filter(item => normalizeNick(item.user) === ownNick).forEach(item => {
+        if (!ids.has(item.id)) state.personalResults.push({ ...item, _ownerId: currentSessionUser.id });
+      });
+
+      ids = containsId(state.questions);
+      (legacy.questions || []).filter(item => normalizeNick(item.nick) === ownNick).forEach(item => {
+        if (!ids.has(item.id)) state.questions.push({ ...item, _ownerId: currentSessionUser.id });
+      });
+      state.questions.forEach(item => {
+        const old = (legacy.questions || []).find(candidate => candidate.id === item.id);
+        if (!old) return;
+        (old.comments || []).filter(comment => normalizeNick(comment.nick) === ownNick)
+          .forEach((comment, index) => {
+            if (!item.comments.some(existing => existing.id === comment.id ||
+              (existing.nick === comment.nick && existing.text === comment.text))) {
+              item.comments.push({ ...comment, id: comment.id || `legacy-question-${item.id}-${index}`, _ownerId: currentSessionUser.id });
+            }
+          });
+        if ((old.likes || []).includes(currentProfile.username) && !item.likes.includes(currentProfile.username)) {
+          item.likes.push(currentProfile.username);
+        }
+      });
+
+      ids = containsId(state.desks);
+      (legacy.desks || []).filter(item => normalizeNick(item.nick) === ownNick).forEach(item => {
+        if (!ids.has(item.id)) state.desks.push({ ...item, _ownerId: currentSessionUser.id });
+      });
+      state.desks.forEach(item => {
+        const old = (legacy.desks || []).find(candidate => candidate.id === item.id);
+        if (!old) return;
+        (old.comments || []).filter(comment => normalizeNick(comment.nick) === ownNick)
+          .forEach((comment, index) => {
+            if (!item.comments.some(existing => existing.id === comment.id ||
+              (existing.nick === comment.nick && existing.text === comment.text))) {
+              item.comments.push({ ...comment, id: comment.id || `legacy-desk-${item.id}-${index}`, _ownerId: currentSessionUser.id });
+            }
+          });
+        if ((old.likes || []).includes(currentProfile.username) && !item.likes.includes(currentProfile.username)) {
+          item.likes.push(currentProfile.username);
+        }
+      });
+
+      ids = containsId(state.chatMessages);
+      (legacy.chatMessages || []).filter(item => normalizeNick(item.nick) === ownNick).forEach(item => {
+        if (!ids.has(item.id)) state.chatMessages.push({ ...item, _ownerId: currentSessionUser.id });
+      });
+      ids = containsId(state.feedbacks);
+      (legacy.feedbacks || []).filter(item => normalizeNick(item.from) === ownNick).forEach(item => {
+        if (!ids.has(item.id)) state.feedbacks.push({ ...item, _ownerId: currentSessionUser.id });
+      });
+
+      ids = containsId(state.exams);
+      (legacy.exams || []).forEach(item => {
+        let existing = state.exams.find(exam => exam.id === item.id);
+        if (!existing && isAdmin() && !ids.has(item.id)) {
+          state.exams.push({ ...item, _ownerId: currentSessionUser.id });
+          ids.add(item.id);
+          existing = state.exams[state.exams.length - 1];
+        }
+        if (!existing) return;
+        (item.participants || []).filter(nick => normalizeNick(nick) === ownNick).forEach(nick => {
+          if (!existing.participants.includes(nick)) existing.participants.push(nick);
+        });
+        (item.scores || []).filter(score => normalizeNick(score.nick) === ownNick).forEach(score => {
+          if (!existing.scores.some(saved => normalizeNick(saved.nick) === ownNick)) {
+            existing.scores.push({ ...score, _ownerId: currentSessionUser.id });
+          }
+        });
+      });
     }
 
     async function syncSupabaseSession() {
-      await fetchAllProfiles();
-      const { data: { session } } = await sb.auth.getSession();
+      if (sessionSyncInFlight) return sessionSyncInFlight;
+      sessionSyncInFlight = (async () => {
+        cloudReady = false;
+        try {
+          await cloudSyncQueue;
+          const { data: { session }, error: sessionError } = await sb.auth.getSession();
+          if (sessionError) throw sessionError;
+          currentSessionUser = session && session.user ? session.user : null;
 
-      if (session && session.user) {
-        currentSessionUser = session.user;
-        let { data: prof } = await sb
-          .from("profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle();
-
-        if (!prof) {
-          const meta = session.user.user_metadata || {};
-          const fallbackNick = normalizeNick(meta.username || session.user.email.split("@")[0]);
-          const newProf = {
-            id: session.user.id,
-            username: fallbackNick,
-            email: session.user.email,
-            target_department: meta.target_department || "İTÜ 2027",
-            bio: meta.bio || "İTÜ 2027 hedefiyle çalışıyor.",
-            avatar_url: meta.avatar_url || ITU_AVATARS[0].uri
-          };
-          const { data: inserted } = await sb
-            .from("profiles")
-            .upsert(newProf)
-            .select()
-            .single();
-          prof = inserted || newProf;
           await fetchAllProfiles();
+          if (currentSessionUser) {
+            const { data: profile, error } = await sb
+              .from("profiles")
+              .select("id,username,target_department,bio,avatar_url,banned,is_admin,created_at")
+              .eq("id", currentSessionUser.id)
+              .maybeSingle();
+            if (error) throw error;
+            if (!profile) {
+              throw new Error("Hesabınızın profili bulunamadı. Supabase SQL geçişini çalıştırın; mevcut hesabınız silinmez.");
+            }
+            currentProfile = profile;
+          } else {
+            currentProfile = null;
+          }
+
+          await fetchCloudRecords();
+          cloudReady = true;
+          if (currentSessionUser) {
+            mergeLegacyOwnData(legacyState);
+            await saveState();
+          }
+          renderAuthUI();
+          renderExams();
+          renderPersonalSection();
+          renderQuestions();
+          renderDesks();
+          renderChat();
+
+          if (!document.getElementById("profil").hidden) renderProfilePage();
+          if (!document.getElementById("ayarlar").hidden) renderSettingsPage();
+          if (!document.getElementById("admin-panel").hidden) renderAdminPanel();
+          return true;
+        } catch (error) {
+          cloudReady = false;
+          console.error("Supabase senkronizasyon hatası:", error);
+          alert("Supabase verileri yüklenemedi. Hiçbir kayıt silinmedi; lütfen Supabase SQL geçişini ve bağlantı ayarlarını kontrol edin.\n\n" + error.message);
+          return false;
         }
-        currentProfile = prof;
-      } else {
-        currentSessionUser = null;
-        currentProfile = null;
+      })();
+      try {
+        return await sessionSyncInFlight;
+      } finally {
+        sessionSyncInFlight = null;
       }
-
-      renderAuthUI();
-      renderExams();
-      renderPersonalSection();
-      renderQuestions();
-      renderDesks();
-      renderChat();
-
-      if (!document.getElementById("profil").hidden) renderProfilePage();
-      if (!document.getElementById("ayarlar").hidden) renderSettingsPage();
-      if (!document.getElementById("admin-panel").hidden) renderAdminPanel();
     }
 
-    sb.auth.onAuthStateChange((_event, _session) => {
-      syncSupabaseSession();
+    sb.auth.onAuthStateChange(() => {
+      setTimeout(() => syncSupabaseSession(), 0);
     });
 
-    function readImageAsDataURL(fileInput, callback) {
+    function resizeImageToBlob(fileInput, callback) {
       const file = fileInput && fileInput.files && fileInput.files[0];
       if (!file) {
         callback("");
@@ -1780,7 +2112,7 @@
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const maxDim = 420;
+          const maxDim = 1200;
           let w = img.width;
           let h = img.height;
           if (w > maxDim || h > maxDim) {
@@ -1795,13 +2127,57 @@
           canvas.width = w;
           canvas.height = h;
           const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            callback("");
+            return;
+          }
           ctx.drawImage(img, 0, 0, w, h);
-          callback(canvas.toDataURL("image/jpeg", 0.78));
+          canvas.toBlob((blob) => callback(blob), "image/jpeg", 0.8);
         };
-        img.onerror = () => callback(String(e.target.result || ""));
+        img.onerror = () => callback("");
         img.src = String(e.target.result || "");
       };
+      reader.onerror = () => callback("");
       reader.readAsDataURL(file);
+    }
+
+    function uploadImage(fileInput, folder, userId) {
+      return new Promise((resolve, reject) => {
+        const file = fileInput && fileInput.files && fileInput.files[0];
+        if (!file) {
+          resolve("");
+          return;
+        }
+        if (!file.type.startsWith("image/") || file.size > 15 * 1024 * 1024) {
+          reject(new Error("Görsel türü geçerli olmalı ve dosya 15 MB'tan küçük olmalıdır."));
+          return;
+        }
+        const ownerId = userId || (currentSessionUser && currentSessionUser.id);
+        if (!ownerId) {
+          reject(new Error("Fotoğraf yüklemek için önce giriş yapın."));
+          return;
+        }
+        resizeImageToBlob(fileInput, async (blob) => {
+          if (!blob) {
+            reject(new Error("Fotoğraf okunamadı. Başka bir görsel deneyin."));
+            return;
+          }
+          const objectName = `${ownerId}/${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.jpg`;
+          try {
+            const { error } = await sb.storage.from("club-media").upload(objectName, blob, {
+              contentType: "image/jpeg",
+              upsert: false
+            });
+            if (error) {
+              reject(error);
+              return;
+            }
+            resolve(sb.storage.from("club-media").getPublicUrl(objectName).data.publicUrl);
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
     }
 
     /* Navigation & Profile Opening */
@@ -1838,7 +2214,19 @@
       if (selector === "#masa-paylasimi") renderDesks();
       if (selector === "#sohbet") renderChat();
       if (selector === "#profil") {
-        fetchAllProfiles().then(() => renderProfilePage());
+        const container = document.getElementById("profile-container");
+        container.innerHTML = `<div class="panel"><p>Profiller yükleniyor...</p></div>`;
+        fetchAllProfiles()
+          .then(() => renderProfilePage())
+          .catch(error => {
+            console.error("Profil listesi yüklenemedi:", error);
+            container.innerHTML = `
+              <div class="panel">
+                <p class="message" style="color:var(--danger);">Profiller yüklenemedi. Supabase geçişini ve bağlantıyı kontrol edin.</p>
+                <p class="panel-sub">${escapeHtml(error.message || "Bilinmeyen bağlantı hatası")}</p>
+                <button type="button" class="btn secondary" onclick="openSection('#profil')">Yeniden Dene</button>
+              </div>`;
+          });
       }
       if (selector === "#ayarlar") renderSettingsPage();
       if (selector === "#admin-panel") renderAdminPanel();
@@ -1974,12 +2362,12 @@
       return `${safe || "uye"}@itu2027.local`;
     }
 
-    /* SUPABASE KAYIT OL (SIGN UP + PROFILES INSERT) */
+    /* Supabase Auth creates the matching profile through the database trigger. */
     document.getElementById("register-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const nick = normalizeNick(document.getElementById("reg-nick").value);
       const rawEmail = document.getElementById("reg-email").value.trim();
-      const email = rawEmail || nickToAuthEmail(nick);
+      const email = rawEmail;
       const target = document.getElementById("reg-target").value.trim();
       const pass = document.getElementById("reg-pass").value;
       const avatarInput = document.getElementById("reg-avatar");
@@ -1989,8 +2377,8 @@
       msg.style.color = "var(--danger)";
       msg.textContent = "";
 
-      if (!nick || nick.length < 2) {
-        msg.textContent = "Lütfen en az 2 karakterlik bir kullanıcı adı (nick) seçin.";
+      if (!/^[a-z0-9._-]{2,30}$/.test(nick)) {
+        msg.textContent = "Kullanıcı adınız 2-30 karakter olmalı; küçük Latin harfleri, rakam, nokta, alt çizgi veya tire kullanın.";
         return;
       }
 
@@ -1998,12 +2386,13 @@
       btn.textContent = "Kaydediliyor...";
 
       try {
-        const { data: existingNick } = await sb
+        const { data: existingNick, error: nickError } = await sb
           .from("profiles")
           .select("id")
           .eq("username", nick)
           .maybeSingle();
 
+        if (nickError) throw nickError;
         if (existingNick) {
           msg.textContent = "Bu kullanıcı adı (@" + nick + ") zaten alınmış.";
           btn.disabled = false;
@@ -2011,53 +2400,56 @@
           return;
         }
 
-        readImageAsDataURL(avatarInput, async (uploadedAvatar) => {
-          const finalAvatar = uploadedAvatar || selectedRegAvatar;
-
-          const { data: authData, error: signUpError } = await sb.auth.signUp({
-            email,
-            password: pass,
-            options: {
-              data: {
-                username: nick,
-                target_department: target,
-                avatar_url: finalAvatar
-              }
-            }
-          });
-
-          if (signUpError) {
-            msg.textContent = "Kayıt hatası: " + signUpError.message;
-            btn.disabled = false;
-            btn.textContent = "Kayıt Ol";
-            return;
-          }
-
-          if (authData && authData.user) {
-            await sb.from("profiles").upsert({
-              id: authData.user.id,
+        const { data: authData, error: signUpError } = await sb.auth.signUp({
+          email,
+          password: pass,
+          options: {
+            data: {
               username: nick,
-              email: email,
               target_department: target,
-              bio: "İTÜ 2027 hedefiyle çalışıyor.",
-              avatar_url: finalAvatar
-            });
-          }
-
-          btn.disabled = false;
-          btn.textContent = "Kayıt Ol";
-
-          if (authData && !authData.session) {
-            msg.style.color = "var(--accent)";
-            msg.textContent = "Kayıt oluşturuldu! E-posta onayı açıksa gelen kutunu kontrol et; değilse doğrudan Giriş Yap sekmesine geçebilirsin.";
-          } else {
-            await syncSupabaseSession();
-            closeAuthModal();
-            e.target.reset();
+              avatar_url: selectedRegAvatar || null
+            }
           }
         });
+        if (signUpError) throw signUpError;
+
+        if (!authData || !authData.user) {
+          throw new Error("Supabase kayıt oluşturduğunu doğrulamadı. Hesaplarınız silinmedi; e-posta ile kontrol edin.");
+        }
+
+        if (!authData.session) {
+          msg.style.color = "var(--accent)";
+          msg.textContent = "Hesap oluşturuldu. E-posta onayı açıksa e-postadaki bağlantıya tıklayın, sonra kullanıcı adınız ve şifrenizle giriş yapın. Profil fotoğrafını giriş yaptıktan sonra ekleyebilirsiniz.";
+        } else {
+          if (avatarInput.files && avatarInput.files[0]) {
+            try {
+              const photoUrl = await uploadImage(avatarInput, "avatars", authData.user.id);
+              const { error: avatarError } = await sb.from("profiles")
+                .update({ avatar_url: photoUrl })
+                .eq("id", authData.user.id);
+              if (avatarError) throw avatarError;
+            } catch (avatarError) {
+              closeAuthModal();
+              e.target.reset();
+              selectedRegAvatar = null;
+              renderRegAvatarPresets();
+              alert("Hesabınız açıldı, ancak profil fotoğrafı yüklenemedi. Giriş yaptıktan sonra Ayarlar bölümünden tekrar deneyin.\n\n" + avatarError.message);
+              return;
+            }
+          }
+          const synced = await syncSupabaseSession();
+          if (!synced) {
+            msg.textContent = "Hesabınız oluştu, ancak profil/veriler yüklenemedi. Supabase kurulumu tamamlandıktan sonra sayfayı yenileyin.";
+            return;
+          }
+          closeAuthModal();
+          e.target.reset();
+          selectedRegAvatar = null;
+          renderRegAvatarPresets();
+        }
       } catch (err) {
-        msg.textContent = "Beklenmeyen bir hata oluştu: " + err.message;
+        msg.textContent = "Kayıt işlemi tamamlanamadı: " + err.message;
+      } finally {
         btn.disabled = false;
         btn.textContent = "Kayıt Ol";
       }
@@ -2076,33 +2468,39 @@
       btn.disabled = true;
       btn.textContent = "Giriş yapılıyor...";
 
-      let emailToTry = identifier;
-      if (!identifier.includes("@")) {
-        const cleanNick = normalizeNick(identifier);
-        const { data: profMatch } = await sb
-          .from("profiles")
-          .select("email")
-          .eq("username", cleanNick)
-          .maybeSingle();
-        emailToTry = (profMatch && profMatch.email) ? profMatch.email : nickToAuthEmail(cleanNick);
-      }
+      try {
+        let emailToTry = identifier;
+        const isEmailAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+        if (!isEmailAddress) {
+          const cleanNick = normalizeNick(identifier);
+          if (!cleanNick) throw new Error("E-posta adresinizi veya kullanıcı adınızı girin.");
+          const { data: profMatch, error: lookupError } = await sb.rpc(
+            "lookup_auth_email_by_username",
+            { input_username: cleanNick }
+          );
+          if (lookupError) throw lookupError;
+          emailToTry = profMatch || nickToAuthEmail(cleanNick);
+        }
 
-      const { error } = await sb.auth.signInWithPassword({
-        email: emailToTry,
-        password: pass
-      });
+        const { error } = await sb.auth.signInWithPassword({
+          email: emailToTry,
+          password: pass
+        });
+        if (error) throw error;
 
-      btn.disabled = false;
-      btn.textContent = "Giriş Yap";
-
-      if (error) {
+        const synced = await syncSupabaseSession();
+        if (!synced) {
+          msg.textContent = "Giriş bilgileri kabul edildi, ancak profil/veriler yüklenemedi. Supabase kurulumunu kontrol edip sayfayı yenileyin.";
+          return;
+        }
+        closeAuthModal();
+        e.target.reset();
+      } catch (error) {
         msg.textContent = "Giriş başarısız: " + error.message;
-        return;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Giriş Yap";
       }
-
-      await syncSupabaseSession();
-      closeAuthModal();
-      e.target.reset();
     });
 
     /* SUPABASE ÇIKIŞ YAP (SIGN OUT) */
@@ -2179,7 +2577,7 @@
       renderRankingTable();
     }
 
-    function toggleJoinExam(examId) {
+    async function toggleJoinExam(examId) {
       const u = requireMember();
       if (!u) return;
       const exam = state.exams.find(item => item.id === examId);
@@ -2188,7 +2586,7 @@
       const idx = exam.participants.indexOf(u.nick);
       if (idx >= 0) exam.participants.splice(idx, 1);
       else exam.participants.push(u.nick);
-      saveState();
+      await saveState();
       renderExams();
     }
 
@@ -2223,15 +2621,19 @@
       if (!exam) return;
       const maxQ = exam.maxQ || (exam.type === "AYT" ? 80 : exam.type === "BRANŞ" ? 40 : 120);
       const existing = (exam.scores || []).find(s => s.nick === u.nick);
+      const subjects = EXAM_SUBJECTS[exam.type] || null;
 
       document.getElementById("info-modal-title").textContent = `${exam.name} · Net Paylaş`;
       document.getElementById("info-modal-body").innerHTML = `
         <form onsubmit="saveExamScore(event, '${escapeHtml(exam.id)}')">
-          <p class="panel-sub">Paylaştığın net haftalık ortak deneme sıralamasında tüm kulüp üyelerine görünür.</p>
+          <p class="panel-sub">Ders netlerini ayrı gir. Toplam netin ve ders dağılımın haftalık sıralamada tüm kulüp üyelerine görünür.</p>
+          <input id="ex-score-id" type="hidden" value="${escapeHtml(exam.id)}">
+          ${subjects ? buildSubjectNetFields(subjects, "ex-sc-subject", existing && existing.subjects || {}) : ""}
           <div class="field-row">
             <div class="field">
-              <label for="ex-sc-net">Netin (Maks. ${maxQ})</label>
-              <input id="ex-sc-net" type="number" min="0" max="${maxQ}" step="0.25" value="${existing ? existing.net : ""}" required>
+              <label for="ex-sc-net">${subjects ? "Toplam net" : "Netin"} (Maks. ${maxQ})</label>
+              <input id="ex-sc-net" type="number" min="0" max="${maxQ}" step="0.25"
+                value="${existing ? formatNet(existing.net) : subjects ? "0" : ""}" ${subjects ? "readonly" : "required"}>
             </div>
             <div class="field">
               <label for="ex-sc-min">Süre (dakika)</label>
@@ -2244,25 +2646,40 @@
       document.getElementById("info-modal").classList.add("open");
     }
 
-    function saveExamScore(e, examId) {
+    async function saveExamScore(e, examId) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
       const exam = state.exams.find(item => item.id === examId);
       if (!exam) return;
-      const net = Number(document.getElementById("ex-sc-net").value);
+      const subjectDefs = EXAM_SUBJECTS[exam.type] || null;
+      const subjects = subjectDefs ? readSubjectNets(subjectDefs, "ex-sc-subject") : null;
+      const net = subjectDefs
+        ? (subjects && sumSubjectNets(subjectDefs, subjects))
+        : Number(document.getElementById("ex-sc-net").value);
       const minutes = Number(document.getElementById("ex-sc-min").value);
+
+      if ((subjectDefs && !subjects) || !Number.isFinite(net) || net < 0 || net > (exam.maxQ || 120) || minutes < 1) {
+        alert("Lütfen her ders için geçerli netleri ve süreyi girin.");
+        return;
+      }
 
       exam.scores = exam.scores || [];
       exam.participants = exam.participants || [];
       if (!exam.participants.includes(u.nick)) exam.participants.push(u.nick);
 
       const idx = exam.scores.findIndex(s => s.nick === u.nick);
-      const record = { nick: u.nick, net, minutes, updatedAt: new Date().toISOString() };
+      const record = {
+        nick: u.nick,
+        net,
+        minutes,
+        ...(subjects ? { subjects } : {}),
+        updatedAt: new Date().toISOString()
+      };
       if (idx >= 0) exam.scores[idx] = record;
       else exam.scores.push(record);
 
-      saveState();
+      await saveState();
       closeInfoModal();
       renderExams();
     }
@@ -2287,7 +2704,7 @@
       const myRankIndex = activeUser ? sorted.findIndex(s => s.nick === activeUser.nick) : -1;
       const bannerHtml = myRankIndex >= 0
         ? `<div style="background:rgba(213,173,132,0.22); border:1px solid var(--orange); padding:10px 14px; border-radius:10px; margin-bottom:12px; font-size:13.5px;">
-             Bu denemede <strong>${sorted.length}</strong> aday arasında <strong>${myRankIndex + 1}.</strong> sıradasın (${sorted[myRankIndex].net} net).
+             Bu denemede <strong>${sorted.length}</strong> aday arasında <strong>${myRankIndex + 1}.</strong> sıradasın (${formatNet(sorted[myRankIndex].net)} net).
            </div>`
         : "";
 
@@ -2317,7 +2734,12 @@
                       </div>
                     </td>
                     <td>${escapeHtml(member && member.target_department ? member.target_department : "İTÜ 2027")}</td>
-                    <td><strong>${row.net}</strong></td>
+                    <td>
+                      <strong>${formatNet(row.net)}</strong>
+                      ${row.subjects && EXAM_SUBJECTS[exam.type]
+                        ? `<div style="font-size:11px;color:var(--muted);">${escapeHtml(formatSubjectSummary(EXAM_SUBJECTS[exam.type], row.subjects))}</div>`
+                        : ""}
+                    </td>
                     <td>${row.minutes} dk</td>
                   </tr>
                 `;
@@ -2429,6 +2851,84 @@
     }, 250);
 
     /* 03. Kişisel Net & Süre Grafikleri (Sadece Kendisi Görür) */
+    const EXAM_SUBJECTS = {
+      TYT: [
+        { key: "turkce", label: "Türkçe", max: 40 },
+        { key: "matematik", label: "Matematik", max: 40 },
+        { key: "sosyal", label: "Sosyal", max: 20 },
+        { key: "fen", label: "Fen", max: 20 }
+      ],
+      AYT: [
+        { key: "matematik", label: "Matematik", max: 40 },
+        { key: "fizik", label: "Fizik", max: 14 },
+        { key: "kimya", label: "Kimya", max: 13 },
+        { key: "biyoloji", label: "Biyoloji", max: 13 }
+      ]
+    };
+    const PERSONAL_CATEGORY_SUBJECTS = {
+      "TYT Genel": EXAM_SUBJECTS.TYT,
+      "AYT Genel": EXAM_SUBJECTS.AYT
+    };
+
+    function formatNet(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? String(Number(number.toFixed(2))) : "—";
+    }
+
+    function formatSubjectSummary(subjects, values) {
+      if (!Array.isArray(subjects) || !values) return "";
+      return subjects.map(subject => `${subject.label} ${formatNet(values[subject.key])}`).join(" · ");
+    }
+
+    function buildSubjectNetFields(subjects, prefix, values = {}) {
+      return `
+        <div class="field-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));">
+          ${subjects.map(subject => `
+            <div class="field">
+              <label for="${prefix}-${subject.key}">${subject.label} net (Maks. ${subject.max})</label>
+              <input id="${prefix}-${subject.key}" type="number" min="0" max="${subject.max}" step="0.25"
+                value="${escapeHtml(values[subject.key] ?? "")}" required oninput="update${prefix === "p-subject" ? "Personal" : "Shared"}SubjectTotal()">
+            </div>
+          `).join("")}
+        </div>`;
+    }
+
+    function readSubjectNets(subjects, prefix) {
+      const values = {};
+      for (const subject of subjects) {
+        const input = document.getElementById(`${prefix}-${subject.key}`);
+        const value = input && input.value !== "" ? Number(input.value) : NaN;
+        if (!Number.isFinite(value) || value < 0 || value > subject.max) return null;
+        values[subject.key] = value;
+      }
+      return values;
+    }
+
+    function sumSubjectNets(subjects, values) {
+      return Number(subjects.reduce((sum, subject) => sum + Number(values[subject.key]), 0).toFixed(2));
+    }
+
+    function updateSubjectTotal(subjects, prefix, totalId) {
+      const values = {};
+      for (const subject of subjects) {
+        const input = document.getElementById(`${prefix}-${subject.key}`);
+        values[subject.key] = input && input.value !== "" ? Number(input.value) : 0;
+      }
+      document.getElementById(totalId).value = String(sumSubjectNets(subjects, values));
+    }
+
+    function updatePersonalSubjectTotal() {
+      const category = document.getElementById("p-exam-cat").value;
+      const subjects = PERSONAL_CATEGORY_SUBJECTS[category];
+      if (subjects) updateSubjectTotal(subjects, "p-subject", "p-net");
+    }
+
+    function updateSharedSubjectTotal() {
+      const exam = state.exams.find(item => item.id === document.getElementById("ex-score-id").value);
+      const subjects = exam && EXAM_SUBJECTS[exam.type];
+      if (subjects) updateSubjectTotal(subjects, "ex-sc-subject", "ex-sc-net");
+    }
+
     const CATEGORY_MAX_Q = {
       "TYT Genel": 120,
       "AYT Genel": 80,
@@ -2450,12 +2950,25 @@
     function updateMaxQuestionHint() {
       const cat = document.getElementById("p-exam-cat").value;
       const maxQ = CATEGORY_MAX_Q[cat] || 120;
-      document.getElementById("p-net-label").textContent = `Net (Maks. ${maxQ})`;
+      const subjects = PERSONAL_CATEGORY_SUBJECTS[cat] || null;
+      const subjectField = document.getElementById("p-subject-fields");
       const netInput = document.getElementById("p-net");
+      document.getElementById("p-net-label").textContent = `${subjects ? "Toplam net" : "Net"} (Maks. ${maxQ})`;
       netInput.max = String(maxQ);
+      netInput.readOnly = Boolean(subjects);
+      netInput.required = !subjects;
+      subjectField.hidden = !subjects;
+      subjectField.innerHTML = subjects ? buildSubjectNetFields(subjects, "p-subject") : "";
+      if (subjects) {
+        netInput.value = "0";
+        updateSubjectTotal(subjects, "p-subject", "p-net");
+      } else {
+        netInput.value = "";
+      }
     }
+    updateMaxQuestionHint();
 
-    document.getElementById("personal-result-form").addEventListener("submit", (e) => {
+    document.getElementById("personal-result-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -2464,9 +2977,13 @@
       const category = document.getElementById("p-exam-cat").value;
       const maxQ = CATEGORY_MAX_Q[category] || 120;
       const minutes = Number(document.getElementById("p-minutes").value);
-      const net = Number(document.getElementById("p-net").value);
+      const subjectDefs = PERSONAL_CATEGORY_SUBJECTS[category] || null;
+      const subjects = subjectDefs ? readSubjectNets(subjectDefs, "p-subject") : null;
+      const net = subjectDefs
+        ? (subjects && sumSubjectNets(subjectDefs, subjects))
+        : Number(document.getElementById("p-net").value);
 
-      if (!name || net < 0 || net > maxQ || minutes < 1) {
+      if (!name || (subjectDefs && !subjects) || !Number.isFinite(net) || net < 0 || net > maxQ || minutes < 1) {
         alert(`Lütfen 0 ile ${maxQ} arasında geçerli bir net girin.`);
         return;
       }
@@ -2474,30 +2991,34 @@
       state.personalResults.push({
         id: "pr-" + Date.now(),
         user: u.nick,
+        _ownerId: u.id,
         name,
         category,
         maxQ,
         minutes,
         net,
+        ...(subjects ? { subjects } : {}),
         createdAt: new Date().toISOString()
       });
-      saveState();
+      const saved = await saveState();
 
       if (category !== "TYT Genel" && category !== "AYT Genel") {
         document.getElementById("branch-filter-select").value = category;
       }
 
       renderPersonalSection();
-      document.getElementById("p-form-msg").textContent = "Kişisel grafiğine kaydedildi (yalnızca sen görebilirsin).";
+      document.getElementById("p-form-msg").textContent = saved
+        ? "Kişisel grafiğine kaydedildi (yalnızca sen görebilirsin)."
+        : "Bu cihazda korundu; Supabase'e kaydedilemedi.";
       e.target.reset();
       updateMaxQuestionHint();
     });
 
-    function deletePersonalResult(id) {
+    async function deletePersonalResult(id) {
       const u = getActiveUser();
       if (!u) return;
       state.personalResults = state.personalResults.filter(r => !(r.id === id && r.user === u.nick));
-      saveState();
+      await saveState();
       renderPersonalSection();
     }
 
@@ -2520,7 +3041,8 @@
             <div>
               <strong>${escapeHtml(r.name)}</strong>
               <div style="font-size:12px; color:var(--muted);">
-                ${escapeHtml(r.category)} · <strong>${r.net} / ${r.maxQ} net</strong> · ${r.minutes} dk
+                ${escapeHtml(r.category)} · <strong>${formatNet(r.net)} / ${r.maxQ} net</strong> · ${r.minutes} dk
+                ${r.subjects ? `<div>${escapeHtml(formatSubjectSummary(PERSONAL_CATEGORY_SUBJECTS[r.category], r.subjects))}</div>` : ""}
               </div>
             </div>
             <button type="button" class="btn danger sm" onclick="deletePersonalResult('${escapeHtml(r.id)}')">Sil</button>
@@ -2569,7 +3091,10 @@
               callbacks: {
                 afterLabel: (ctx) => {
                   const row = items[ctx.dataIndex];
-                  return `Süre: ${row.minutes} dk (${row.net}/${maxY})`;
+                  const details = [`Süre: ${row.minutes} dk (${row.net}/${maxY})`];
+                  const subjects = PERSONAL_CATEGORY_SUBJECTS[row.category];
+                  if (row.subjects && subjects) details.push(formatSubjectSummary(subjects, row.subjects));
+                  return details;
                 }
               }
             }
@@ -2600,7 +3125,7 @@
     }
 
     /* 04. Soru Duvarı */
-    document.getElementById("question-form").addEventListener("submit", (e) => {
+    document.getElementById("question-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -2609,10 +3134,12 @@
       const content = document.getElementById("q-content").value.trim();
       const photoInput = document.getElementById("q-photo");
 
-      readImageAsDataURL(photoInput, (photoData) => {
+      try {
+        const photoData = await uploadImage(photoInput, "questions", u.id);
         state.questions.unshift({
           id: "q-" + Date.now(),
           nick: u.nick,
+          _ownerId: u.id,
           subject,
           content,
           photo: photoData,
@@ -2620,13 +3147,15 @@
           comments: [],
           createdAt: new Date().toISOString()
         });
-        saveState();
+        await saveState();
         renderQuestions();
         e.target.reset();
-      });
+      } catch (error) {
+        alert("Soru paylaşımı kaydedilemedi: " + error.message);
+      }
     });
 
-    function toggleQuestionLike(qId) {
+    async function toggleQuestionLike(qId) {
       const u = requireMember();
       if (!u) return;
       const q = state.questions.find(item => item.id === qId);
@@ -2635,11 +3164,11 @@
       const i = q.likes.indexOf(u.nick);
       if (i >= 0) q.likes.splice(i, 1);
       else q.likes.push(u.nick);
-      saveState();
+      await saveState();
       renderQuestions();
     }
 
-    function addQuestionComment(e, qId) {
+    async function addQuestionComment(e, qId) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -2649,8 +3178,8 @@
       const q = state.questions.find(item => item.id === qId);
       if (!q) return;
       q.comments = q.comments || [];
-      q.comments.push({ nick: u.nick, text });
-      saveState();
+      q.comments.push({ id: `qc-${Date.now()}`, nick: u.nick, text, createdAt: new Date().toISOString(), _ownerId: u.id });
+      await saveState();
       renderQuestions();
     }
 
@@ -2709,7 +3238,7 @@
     }
 
     /* 05. Masa Paylaşımı (Beğeni + Yorum + Şikayet) */
-    document.getElementById("desk-form").addEventListener("submit", (e) => {
+    document.getElementById("desk-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -2717,7 +3246,8 @@
       const caption = document.getElementById("desk-caption").value.trim();
       const photoInput = document.getElementById("desk-photo");
 
-      readImageAsDataURL(photoInput, (photoData) => {
+      try {
+        const photoData = await uploadImage(photoInput, "desks", u.id);
         if (!photoData) {
           alert("Lütfen galeriden bir masa fotoğrafı seçin.");
           return;
@@ -2725,19 +3255,22 @@
         state.desks.unshift({
           id: "d-" + Date.now(),
           nick: u.nick,
+          _ownerId: u.id,
           caption,
           photo: photoData,
           likes: [],
           comments: [],
           createdAt: new Date().toISOString()
         });
-        saveState();
+        await saveState();
         renderDesks();
         e.target.reset();
-      });
+      } catch (error) {
+        alert("Masa paylaşımı kaydedilemedi: " + error.message);
+      }
     });
 
-    function toggleDeskLike(dId) {
+    async function toggleDeskLike(dId) {
       const u = requireMember();
       if (!u) return;
       const d = state.desks.find(item => item.id === dId);
@@ -2746,11 +3279,11 @@
       const i = d.likes.indexOf(u.nick);
       if (i >= 0) d.likes.splice(i, 1);
       else d.likes.push(u.nick);
-      saveState();
+      await saveState();
       renderDesks();
     }
 
-    function addDeskComment(e, dId) {
+    async function addDeskComment(e, dId) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -2760,8 +3293,8 @@
       const d = state.desks.find(item => item.id === dId);
       if (!d) return;
       d.comments = d.comments || [];
-      d.comments.push({ nick: u.nick, text });
-      saveState();
+      d.comments.push({ id: `dc-${Date.now()}`, nick: u.nick, text, createdAt: new Date().toISOString(), _ownerId: u.id });
+      await saveState();
       renderDesks();
     }
 
@@ -2820,7 +3353,7 @@
     }
 
     /* 06. Sohbet & Tartışma Odası */
-    function sendChatMessage(e) {
+    async function sendChatMessage(e) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -2831,11 +3364,11 @@
       state.chatMessages.push({
         id: "m-" + Date.now(),
         nick: u.nick,
+        _ownerId: u.id,
         text,
         createdAt: new Date().toISOString()
       });
-      if (state.chatMessages.length > 150) state.chatMessages.shift();
-      saveState();
+      await saveState();
       input.value = "";
       renderChat();
     }
@@ -2844,7 +3377,7 @@
       const box = document.getElementById("chat-box");
       const activeUser = getActiveUser();
 
-      box.innerHTML = state.chatMessages.map(m => {
+      box.innerHTML = state.chatMessages.slice(-150).map(m => {
         const member = findProfileByNick(m.nick);
         const isMine = activeUser && activeUser.nick === m.nick;
         return `
@@ -2986,7 +3519,7 @@
                 <label>Veya İTÜ Özel Avatarı Seç</label>
                 <div class="avatar-picker-grid">
                   ${ITU_AVATARS.map(av => `
-                    <button type="button" class="avatar-opt" onclick="applyPresetToUser('${av.id}')">
+                    <button type="button" class="avatar-opt ${currentProfile.avatar_url === av.uri ? "selected" : ""}" onclick="applyPresetToUser('${av.id}')">
                       <img src="${av.uri}" alt="${escapeHtml(av.label)}">
                       <span>${escapeHtml(av.label)}</span>
                     </button>
@@ -3021,28 +3554,41 @@
       `;
     }
 
+    function updateProfileInClient(userId, updates) {
+      if (currentProfile && currentProfile.id === userId) {
+        currentProfile = { ...currentProfile, ...updates };
+      }
+      allProfiles = allProfiles.map(profile =>
+        profile.id === userId ? { ...profile, ...updates } : profile
+      );
+      renderAuthUI();
+    }
+
     async function applyPresetToUser(presetId) {
       const u = requireMember();
       if (!u) return;
       const found = ITU_AVATARS.find(a => a.id === presetId);
       if (!found) return;
 
-      const { error } = await sb
-        .from("profiles")
-        .update({ avatar_url: found.uri })
-        .eq("id", u.id);
+      try {
+        const { error } = await sb
+          .from("profiles")
+          .update({ avatar_url: found.uri })
+          .eq("id", u.id);
+        if (error) throw error;
 
-      if (error) {
+        updateProfileInClient(u.id, { avatar_url: found.uri });
+        const synced = await syncSupabaseSession();
+        renderSettingsPage();
+        document.getElementById("set-msg").textContent = synced
+          ? "İTÜ avatarınız Supabase profilinize kaydedildi."
+          : "Avatar kaydedildi; ancak diğer veriler yenilenemedi. SQL geçişini kontrol edin.";
+      } catch (error) {
         alert("Avatar güncellenemedi: " + error.message);
-        return;
       }
-
-      await syncSupabaseSession();
-      renderSettingsPage();
-      document.getElementById("set-msg").textContent = "İTÜ avatarınız Supabase profilinize kaydedildi.";
     }
 
-    function saveUserSettings(e) {
+    async function saveUserSettings(e) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -3050,12 +3596,14 @@
       const bio = document.getElementById("set-bio").value.trim();
       const fileInput = document.getElementById("set-avatar-file");
 
-      readImageAsDataURL(fileInput, async (uploaded) => {
+      try {
         const updates = {
           target_department: target,
           bio
         };
-        if (uploaded) updates.avatar_url = uploaded;
+        if (fileInput.files && fileInput.files[0]) {
+          updates.avatar_url = await uploadImage(fileInput, "avatars", u.id);
+        }
 
         const { error } = await sb
           .from("profiles")
@@ -3063,17 +3611,21 @@
           .eq("id", u.id);
 
         if (error) {
-          alert("Profil güncellenirken hata oluştu: " + error.message);
-          return;
+          throw error;
         }
 
-        await syncSupabaseSession();
+        updateProfileInClient(u.id, updates);
+        const synced = await syncSupabaseSession();
         renderSettingsPage();
-        document.getElementById("set-msg").textContent = "Profil ayarlarınız kaydedildi.";
-      });
+        document.getElementById("set-msg").textContent = synced
+          ? "Profil ayarlarınız kaydedildi."
+          : "Profil ayarlarınız kaydedildi; ancak diğer veriler yenilenemedi. SQL geçişini kontrol edin.";
+      } catch (error) {
+        alert("Profil güncellenirken hata oluştu: " + error.message);
+      }
     }
 
-    function submitFeedbackForm(e) {
+    async function submitFeedbackForm(e) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -3084,13 +3636,16 @@
       state.feedbacks.unshift({
         id: "fb-" + Date.now(),
         from: u.nick,
+        _ownerId: u.id,
         type,
         text,
         createdAt: new Date().toISOString()
       });
-      saveState();
+      const saved = await saveState();
       e.target.reset();
-      document.getElementById("fb-msg").textContent = "Bildiriminiz yönetici paneline iletildi.";
+      document.getElementById("fb-msg").textContent = saved
+        ? "Bildiriminiz yönetime iletildi."
+        : "Bu cihazda korundu; yönetime iletilemedi.";
     }
 
     function openQuickReport(subjectInfo) {
@@ -3110,7 +3665,7 @@
       document.getElementById("info-modal").classList.add("open");
     }
 
-    function submitQuickReport(e, subjectInfo) {
+    async function submitQuickReport(e, subjectInfo) {
       e.preventDefault();
       const u = requireMember();
       if (!u) return;
@@ -3118,11 +3673,12 @@
       state.feedbacks.unshift({
         id: "fb-" + Date.now(),
         from: u.nick,
+        _ownerId: u.id,
         type: "Şikayet",
         text: `[${subjectInfo}] ${desc}`,
         createdAt: new Date().toISOString()
       });
-      saveState();
+      await saveState();
       closeInfoModal();
       alert("Bildiriminiz yönetici paneline iletildi.");
     }
@@ -3269,7 +3825,7 @@
                   </div>
                 </div>
                 <div>
-                  ${member.username === ADMIN_NICK ? `<span class="tag admin">Yönetici</span>` : `<span class="tag">Üye</span>`}
+                  ${member.is_admin ? `<span class="tag admin">Yönetici</span>` : `<span class="tag">Üye</span>`}
                 </div>
               </div>
             `).join("")}
@@ -3280,20 +3836,21 @@
       container.innerHTML = tabsHtml + tabBody;
     }
 
-    function deleteFeedback(fbId) {
+    async function deleteFeedback(fbId) {
       if (!isAdmin()) return;
       state.feedbacks = state.feedbacks.filter(f => f.id !== fbId);
-      saveState();
+      await saveState();
       renderAdminPanel();
     }
 
-    function adminAddExam(e) {
+    async function adminAddExam(e) {
       e.preventDefault();
       if (!isAdmin()) return;
       const type = document.getElementById("adm-ex-type").value;
       const maxQ = type === "AYT" ? 80 : type === "BRANŞ" ? 40 : 120;
       state.exams.push({
         id: "ex-" + Date.now(),
+        _ownerId: currentSessionUser.id,
         name: document.getElementById("adm-ex-name").value.trim(),
         type,
         maxQ,
@@ -3303,15 +3860,15 @@
         participants: [],
         scores: []
       });
-      saveState();
+      await saveState();
       renderExams();
       renderAdminPanel();
     }
 
-    function adminDeleteExam(exId) {
+    async function adminDeleteExam(exId) {
       if (!isAdmin()) return;
       state.exams = state.exams.filter(ex => ex.id !== exId);
-      saveState();
+      await saveState();
       renderExams();
       renderAdminPanel();
     }
@@ -3323,6 +3880,7 @@
 
     /* Initial Boot */
     lucide.createIcons();
+    renderAuthUI();
     syncSupabaseSession();
   </script>
 </body>
