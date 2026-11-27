@@ -297,8 +297,8 @@
       margin-bottom: 52px;
     }
 
-    .view-section[hidden] {
-      display: none;
+    [hidden] {
+      display: none !important;
     }
 
     .section-head {
@@ -359,6 +359,13 @@
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 16px;
+    }
+
+    .study-tracker-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
     }
 
     .card, .panel {
@@ -620,6 +627,10 @@
     .chart-wrap canvas {
       display: block;
       max-width: 100%;
+    }
+
+    .chart-wrap canvas[hidden] {
+      display: none !important;
     }
 
     .empty {
@@ -994,6 +1005,9 @@
       .track-grid, .wall-grid, .two-col, .two-col-even {
         grid-template-columns: 1fr;
       }
+      .study-tracker-grid {
+        grid-template-columns: 1fr;
+      }
       .chart-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -1253,6 +1267,51 @@
           </div>
           <div id="sw-laps" class="history" style="margin-top:14px;"></div>
         </article>
+      </div>
+
+      <div class="panel">
+        <div class="section-head" style="margin-bottom:16px;">
+          <div>
+            <h3 style="margin:0;">Günlük çalışma takibim</h3>
+            <p class="panel-sub" style="margin:5px 0 0;">Kronometreyi duraklattığında süre günlük toplamına eklenir. Geçmiş günler için elle süre ekleyebilir veya toplamı düzenleyebilirsin.</p>
+          </div>
+        </div>
+        <div class="study-tracker-grid">
+          <form id="study-entry-form" class="post-card" style="padding:14px;">
+            <h3 style="margin:0 0 12px;">Çalışma süresi ekle</h3>
+            <div class="field">
+              <label for="study-entry-date">Çalışma tarihi</label>
+              <input id="study-entry-date" type="date" required>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="study-entry-hours">Saat</label>
+                <input id="study-entry-hours" type="number" min="0" max="24" step="1" value="0" required>
+              </div>
+              <div class="field">
+                <label for="study-entry-minutes">Dakika</label>
+                <input id="study-entry-minutes" type="number" min="0" max="59" step="1" value="30" required>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="study-entry-submit" class="btn primary" type="submit">Süreyi ekle</button>
+              <button id="study-entry-cancel" class="btn secondary" type="button" onclick="cancelStudyEdit()" hidden>İptal</button>
+            </div>
+            <p id="study-entry-message" class="message" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="post-card" style="padding:14px;">
+            <h3 style="margin:0 0 6px;">Bu haftanın çalışma sıralaması</h3>
+            <p id="study-week-label" class="panel-sub" style="margin:0 0 12px;"></p>
+            <div id="weekly-study-list" class="question-list" aria-live="polite"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <h3>Geçmiş çalışma sürelerim</h3>
+          <p class="panel-sub">Kişisel gün gün toplamlarını yalnızca sen görebilirsin.</p>
+          <div id="study-history-list" class="question-list"></div>
+        </div>
       </div>
     </section>
 
@@ -1671,6 +1730,7 @@
         }
       ],
       personalResults: [],
+      studySessions: [],
       questions: [],
       desks: [],
       chatMessages: [
@@ -1694,6 +1754,7 @@
           ...parsed,
           exams: Array.isArray(parsed.exams) ? parsed.exams : structuredClone(DEFAULT_STATE.exams),
           personalResults: Array.isArray(parsed.personalResults) ? parsed.personalResults : [],
+          studySessions: Array.isArray(parsed.studySessions) ? parsed.studySessions : [],
           questions: Array.isArray(parsed.questions) ? parsed.questions : [],
           desks: Array.isArray(parsed.desks) ? parsed.desks : [],
           chatMessages: Array.isArray(parsed.chatMessages) ? parsed.chatMessages : structuredClone(DEFAULT_STATE.chatMessages),
@@ -1803,6 +1864,7 @@
     function hydrateCloudRecords(records) {
       const exams = [];
       const personalResults = [];
+      const studySessions = [];
       const questions = [];
       const desks = [];
       const chatMessages = [];
@@ -1825,7 +1887,12 @@
           const { id: ignoredId, ...score } = payload;
           parent.scores.push({ ...score, _ownerId: record.owner_id });
         }
-        if (record.kind === "personal_result") personalResults.push({ ...payload, user: payload.user || (currentProfile && currentProfile.username) });
+        if (record.kind === "personal_result") {
+          personalResults.push({ ...payload, user: currentProfile ? currentProfile.username : payload.user });
+        }
+        if (record.kind === "study_session") {
+          studySessions.push({ ...payload, user: currentProfile ? currentProfile.username : payload.user });
+        }
         if (record.kind === "question") questions.push({ ...payload, likes: [], comments: [] });
         if (record.kind === "desk") desks.push({ ...payload, likes: [], comments: [] });
         if (record.kind === "chat") chatMessages.push(payload);
@@ -1856,6 +1923,7 @@
       return {
         exams,
         personalResults,
+        studySessions,
         questions,
         desks,
         chatMessages: chatMessages.length ? chatMessages : structuredClone(DEFAULT_STATE.chatMessages),
@@ -1901,6 +1969,10 @@
       state.personalResults.forEach((item) => {
         const { _ownerId, ...payload } = item;
         add(item.id, "personal_result", _ownerId || (currentSessionUser && currentSessionUser.id), null, payload, "private");
+      });
+      state.studySessions.forEach((item) => {
+        const { _ownerId, ...payload } = item;
+        add(item.id, "study_session", _ownerId || (currentSessionUser && currentSessionUser.id), null, payload, "private");
       });
       state.questions.forEach((item) => {
         const { likes = [], comments = [], _ownerId, ...payload } = item;
@@ -1995,6 +2067,11 @@
       let ids = containsId(state.personalResults);
       (legacy.personalResults || []).filter(item => normalizeNick(item.user) === ownNick).forEach(item => {
         if (!ids.has(item.id)) state.personalResults.push({ ...item, _ownerId: currentSessionUser.id });
+      });
+
+      ids = containsId(state.studySessions);
+      (legacy.studySessions || []).filter(item => normalizeNick(item.user) === ownNick).forEach(item => {
+        if (!ids.has(item.id)) state.studySessions.push({ ...item, _ownerId: currentSessionUser.id });
       });
 
       ids = containsId(state.questions);
@@ -2099,6 +2176,7 @@
           renderAuthUI();
           renderExams();
           renderPersonalSection();
+          renderStudyTracker();
           renderQuestions();
           renderDesks();
           renderChat();
@@ -2233,7 +2311,12 @@
         renderExams();
         renderRankingTable();
       }
-      if (selector === "#gelisim") renderPersonalSection();
+      if (selector === "#gelisim") {
+        renderPersonalSection();
+        requestAnimationFrame(() => [tytChart, aytChart, branchChart]
+          .forEach(chart => { if (chart) chart.resize(); }));
+      }
+      if (selector === "#kronometre") renderStudyTracker();
       if (selector === "#soru-duvari") renderQuestions();
       if (selector === "#masa-paylasimi") renderDesks();
       if (selector === "#sohbet") renderChat();
@@ -2529,6 +2612,7 @@
 
     /* SUPABASE ÇIKIŞ YAP (SIGN OUT) */
     async function logoutUser() {
+      if (swRunning) await toggleStopwatch();
       await sb.auth.signOut();
       currentSessionUser = null;
       currentProfile = null;
@@ -2808,6 +2892,9 @@
     let swElapsed = 0;
     let swRunning = false;
     let swLast = 0;
+    let swSegmentStartedAt = 0;
+    let swOwnerId = null;
+    let swOwnerNick = null;
     let swLaps = [];
 
     function formatTime(seconds) {
@@ -2852,9 +2939,27 @@
       paintTimers();
     }
 
-    function toggleStopwatch() {
-      swRunning = !swRunning;
+    async function toggleStopwatch() {
+      if (swRunning) {
+        const stoppedAt = Date.now();
+        const segmentStart = swSegmentStartedAt;
+        const owner = { id: swOwnerId, nick: swOwnerNick };
+        swRunning = false;
+        swSegmentStartedAt = 0;
+        swOwnerId = null;
+        swOwnerNick = null;
+        paintTimers();
+        if (segmentStart && owner.id) await saveStudyInterval(segmentStart, stoppedAt, owner);
+        return;
+      }
+
+      const user = requireMember();
+      if (!user) return;
+      swRunning = true;
       swLast = Date.now();
+      swSegmentStartedAt = swLast;
+      swOwnerId = user.id;
+      swOwnerNick = user.nick;
       paintTimers();
     }
 
@@ -2866,13 +2971,266 @@
         .join("");
     }
 
-    function resetStopwatch() {
-      swRunning = false;
+    async function resetStopwatch() {
+      if (swRunning) await toggleStopwatch();
       swElapsed = 0;
       swLaps = [];
       document.getElementById("sw-laps").innerHTML = "";
       paintTimers();
     }
+
+    function localDateKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function splitStudyInterval(startMs, endMs) {
+      const dailySeconds = new Map();
+      let cursor = startMs;
+      while (cursor < endMs) {
+        const day = new Date(cursor);
+        const nextDay = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1).getTime();
+        const segmentEnd = Math.min(endMs, nextDay);
+        const seconds = Math.floor((segmentEnd - cursor) / 1000);
+        const dateKey = localDateKey(day);
+        if (seconds > 0) dailySeconds.set(dateKey, (dailySeconds.get(dateKey) || 0) + seconds);
+        cursor = segmentEnd;
+      }
+      return [...dailySeconds].map(([date, seconds]) => ({ date, seconds }));
+    }
+
+    async function saveStudyInterval(startMs, endMs, owner) {
+      if (!cloudReady || !currentSessionUser || currentSessionUser.id !== owner.id) {
+        alert("Çalışma süresi hesabına kaydedilemedi. Oturumunu kontrol et; süre bu cihazda korunuyor.");
+        return false;
+      }
+
+      const segments = splitStudyInterval(startMs, endMs);
+      if (!segments.length) return true;
+      for (const segment of segments) {
+        const existing = state.studySessions.find(item =>
+          item._ownerId === owner.id && item.studyDate === segment.date
+        );
+        if (existing && Number(existing.seconds || 0) + segment.seconds > 86400) {
+          alert("Bir gün için kaydedilebilecek toplam çalışma süresi 24 saati geçemez.");
+          return false;
+        }
+      }
+
+      for (const segment of segments) {
+        const existing = state.studySessions.find(item =>
+          item._ownerId === owner.id && item.studyDate === segment.date
+        );
+        if (existing) {
+          existing.seconds = Number(existing.seconds || 0) + segment.seconds;
+          existing.updatedAt = new Date().toISOString();
+        } else {
+          state.studySessions.push({
+            id: `study:${owner.id}:${segment.date}`,
+            user: owner.nick,
+            _ownerId: owner.id,
+            studyDate: segment.date,
+            seconds: segment.seconds,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+
+      const saved = await saveState();
+      renderStudyTracker();
+      return saved;
+    }
+
+    function formatStudyDuration(seconds) {
+      const minutes = Math.round(Math.max(0, Number(seconds) || 0) / 60);
+      const hours = Math.floor(minutes / 60);
+      const remainingMinutes = minutes % 60;
+      if (hours && remainingMinutes) return `${hours} saat ${remainingMinutes} dk`;
+      if (hours) return `${hours} saat`;
+      return `${remainingMinutes} dk`;
+    }
+
+    function studyWeekStart(date = new Date()) {
+      const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+      return localDateKey(start);
+    }
+
+    function formatStudyDate(dateKey, options = { day: "numeric", month: "long", year: "numeric" }) {
+      const [year, month, day] = String(dateKey || "").split("-").map(Number);
+      if (!year || !month || !day) return "Geçersiz tarih";
+      return new Intl.DateTimeFormat("tr-TR", options).format(new Date(year, month - 1, day));
+    }
+
+    function renderStudyHistory() {
+      const list = document.getElementById("study-history-list");
+      const user = getActiveUser();
+      if (!user) {
+        list.innerHTML = `<div class="empty">Çalışma geçmişini görmek ve kaydetmek için giriş yapmalısın.</div>`;
+        return;
+      }
+
+      const mine = state.studySessions
+        .filter(item => item._ownerId === user.id || normalizeNick(item.user) === normalizeNick(user.nick))
+        .sort((a, b) => String(b.studyDate).localeCompare(String(a.studyDate)));
+      if (!mine.length) {
+        list.innerHTML = `<div class="empty">Henüz kayıtlı çalışma süren yok. Kronometreyi duraklat veya geçmiş bir gün için süre ekle.</div>`;
+        return;
+      }
+
+      list.innerHTML = mine.map(item => `
+        <div class="post-card" style="padding:11px 13px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <div>
+            <strong>${escapeHtml(formatStudyDate(item.studyDate))}</strong>
+            <div class="panel-sub" style="margin:3px 0 0;">Toplam ${escapeHtml(formatStudyDuration(item.seconds))}</div>
+          </div>
+          <button type="button" class="btn secondary sm" onclick="editStudyLog('${escapeHtml(item.studyDate)}')">Düzenle</button>
+        </div>
+      `).join("");
+    }
+
+    async function loadWeeklyStudyLeaderboard() {
+      const list = document.getElementById("weekly-study-list");
+      const weekStart = studyWeekStart();
+      const weekEndDate = new Date(`${weekStart}T12:00:00`);
+      weekEndDate.setDate(weekEndDate.getDate() + 6);
+      document.getElementById("study-week-label").textContent =
+        `${formatStudyDate(weekStart, { day: "numeric", month: "short" })} – ${formatStudyDate(localDateKey(weekEndDate), { day: "numeric", month: "short" })}`;
+
+      if (!getActiveUser() || !cloudReady) {
+        list.innerHTML = `<div class="empty">Haftalık sıralamayı görmek için giriş yapmalısın.</div>`;
+        return;
+      }
+
+      list.innerHTML = `<div class="empty">Sıralama yükleniyor…</div>`;
+      const requestUserId = currentSessionUser.id;
+      let data;
+      try {
+        const result = await sb.rpc("weekly_study_leaderboard", { p_week_start: weekStart });
+        if (result.error) throw result.error;
+        data = result.data;
+      } catch (error) {
+        console.error("Haftalık çalışma sıralaması yüklenemedi:", error);
+        list.innerHTML = `<div class="empty">Sıralama yüklenemedi. Supabase çalışma takibi güncellemesini kontrol et.</div>`;
+        return;
+      }
+      if (!currentSessionUser || currentSessionUser.id !== requestUserId || !cloudReady) {
+        list.innerHTML = `<div class="empty">Haftalık sıralamayı görmek için giriş yapmalısın.</div>`;
+        return;
+      }
+      if (!Array.isArray(data) || !data.length) {
+        list.innerHTML = `<div class="empty">Bu hafta henüz çalışma süresi paylaşılmadı.</div>`;
+        return;
+      }
+
+      list.innerHTML = data.map((row, index) => `
+        <div class="post-card" style="padding:10px 12px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+          <div><strong>${index + 1}. @${escapeHtml(row.username)}</strong></div>
+          <strong>${escapeHtml(formatStudyDuration(row.total_seconds))}</strong>
+        </div>
+      `).join("");
+    }
+
+    function renderStudyTracker() {
+      const dateInput = document.getElementById("study-entry-date");
+      if (!dateInput.value) dateInput.value = localDateKey(new Date());
+      renderStudyHistory();
+      loadWeeklyStudyLeaderboard();
+    }
+
+    let studyEditingDate = null;
+
+    function editStudyLog(dateKey) {
+      const user = getActiveUser();
+      if (!user) return;
+      const item = state.studySessions.find(row =>
+        row.studyDate === dateKey &&
+        (row._ownerId === user.id || normalizeNick(row.user) === normalizeNick(user.nick))
+      );
+      if (!item) return;
+
+      studyEditingDate = dateKey;
+      document.getElementById("study-entry-date").value = dateKey;
+      document.getElementById("study-entry-date").disabled = true;
+      const totalMinutes = Math.round(Number(item.seconds || 0) / 60);
+      document.getElementById("study-entry-hours").value = String(Math.floor(totalMinutes / 60));
+      document.getElementById("study-entry-minutes").value = String(totalMinutes % 60);
+      document.getElementById("study-entry-submit").textContent = "Günlük toplamı kaydet";
+      document.getElementById("study-entry-cancel").hidden = false;
+      document.getElementById("study-entry-message").textContent =
+        "Düzenleme sırasında tarih sabittir. Başka gün için yeni süre ekleyebilirsin.";
+    }
+
+    function cancelStudyEdit() {
+      studyEditingDate = null;
+      const form = document.getElementById("study-entry-form");
+      form.reset();
+      document.getElementById("study-entry-date").disabled = false;
+      document.getElementById("study-entry-date").value = localDateKey(new Date());
+      document.getElementById("study-entry-hours").value = "0";
+      document.getElementById("study-entry-minutes").value = "30";
+      document.getElementById("study-entry-submit").textContent = "Süreyi ekle";
+      document.getElementById("study-entry-cancel").hidden = true;
+      document.getElementById("study-entry-message").textContent = "";
+    }
+
+    document.getElementById("study-entry-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const user = requireMember();
+      if (!user) return;
+
+      const date = document.getElementById("study-entry-date").value;
+      const hours = Number(document.getElementById("study-entry-hours").value);
+      const minutes = Number(document.getElementById("study-entry-minutes").value);
+      const addedSeconds = (hours * 60 + minutes) * 60;
+      const message = document.getElementById("study-entry-message");
+      if (!date || date > localDateKey(new Date()) || !Number.isInteger(hours) ||
+        !Number.isInteger(minutes) || hours < 0 || hours > 24 || minutes < 0 || minutes > 59 ||
+        addedSeconds < 60 || addedSeconds > 86400) {
+        message.textContent = "Geçerli bir tarih ve 1 dakika ile 24 saat arasında süre gir.";
+        return;
+      }
+
+      if (studyEditingDate) {
+        const existing = state.studySessions.find(item =>
+          item.studyDate === studyEditingDate && item._ownerId === user.id
+        );
+        if (!existing) {
+          message.textContent = "Düzenlenecek çalışma kaydı bulunamadı.";
+          return;
+        }
+        existing.seconds = addedSeconds;
+        existing.updatedAt = new Date().toISOString();
+      } else {
+        const existing = state.studySessions.find(item =>
+          item.studyDate === date && item._ownerId === user.id
+        );
+        if (existing) {
+          if (Number(existing.seconds || 0) + addedSeconds > 86400) {
+            message.textContent = "Bir gün için toplam süre 24 saati geçemez.";
+            return;
+          }
+          existing.seconds = Number(existing.seconds || 0) + addedSeconds;
+          existing.updatedAt = new Date().toISOString();
+        } else {
+          state.studySessions.push({
+            id: `study:${user.id}:${date}`,
+            user: user.nick,
+            _ownerId: user.id,
+            studyDate: date,
+            seconds: addedSeconds,
+            updatedAt: new Date().toISOString()
+          });
+        }
+      }
+
+      const wasEditing = Boolean(studyEditingDate);
+      const saved = await saveState();
+      cancelStudyEdit();
+      renderStudyTracker();
+      message.textContent = saved
+        ? wasEditing ? "Günlük toplam güncellendi." : "Çalışma süresi eklendi."
+        : "Bu cihazda saklandı ancak Supabase'e aktarılamadı.";
+    });
 
     setInterval(() => {
       const now = Date.now();
@@ -3103,6 +3461,13 @@
       const emptyEl = document.getElementById(emptyId);
       if (oldChart) oldChart.destroy();
 
+      if (typeof Chart !== "function") {
+        emptyEl.textContent = "Grafik kütüphanesi yüklenemedi. İnternet bağlantını kontrol edip sayfayı yenile.";
+        emptyEl.hidden = false;
+        canvas.hidden = true;
+        return null;
+      }
+
       if (!items.length) {
         emptyEl.hidden = false;
         canvas.hidden = true;
@@ -3189,7 +3554,9 @@
 
     function renderPersonalCharts() {
       const u = getActiveUser();
-      const mine = u ? state.personalResults.filter(r => r.user === u.nick) : [];
+      const mine = u
+        ? state.personalResults.filter(r => normalizeNick(r.user) === normalizeNick(u.nick))
+        : [];
 
       const tytItems = mine.filter(r => r.category === "TYT Genel");
       tytChart = drawLineChart("tyt-chart", "tyt-chart-empty", tytChart, tytItems, 120, "#3d6b5e");
