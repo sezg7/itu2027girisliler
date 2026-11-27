@@ -355,6 +355,12 @@
       gap: 18px;
     }
 
+    .chart-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
     .card, .panel {
       background: var(--white);
       border: 1px solid var(--line);
@@ -607,6 +613,13 @@
       height: 225px;
       position: relative;
       width: 100%;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .chart-wrap canvas {
+      display: block;
+      max-width: 100%;
     }
 
     .empty {
@@ -962,6 +975,7 @@
     body.mobile-mode .wall-grid,
     body.mobile-mode .two-col,
     body.mobile-mode .two-col-even,
+    body.mobile-mode .chart-grid,
     body.mobile-mode .field-row {
       grid-template-columns: 1fr;
     }
@@ -979,6 +993,9 @@
       }
       .track-grid, .wall-grid, .two-col, .two-col-even {
         grid-template-columns: 1fr;
+      }
+      .chart-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
@@ -1012,6 +1029,9 @@
         font-size: 32px;
       }
       .cards, .timer-grid, .field-row {
+        grid-template-columns: 1fr;
+      }
+      .chart-grid {
         grid-template-columns: 1fr;
       }
       .insta-grid {
@@ -1166,6 +1186,10 @@
       </div>
 
       <div id="exam-cards" class="cards"></div>
+      <div id="past-exams" class="panel" style="margin-top:18px;" hidden>
+        <h3 style="margin:0 0 14px;">Geçmiş Denemeler</h3>
+        <div id="past-exam-cards" class="cards"></div>
+      </div>
 
       <!-- Ortak Deneme Haftalık Sıralama -->
       <div class="panel" style="margin-top:24px;">
@@ -1291,7 +1315,7 @@
       </div>
 
       <!-- 3 Ayrı Grafik: TYT (120), AYT (80), Branş (Dinamik 40/20/14/13) -->
-      <div class="cards">
+      <div class="chart-grid">
         <div class="panel">
           <h3>TYT Genel Grafiği (120 Soru)</h3>
           <p class="panel-sub">Toplam net grafiği; noktaya dokunarak ders netlerini gör.</p>
@@ -2514,9 +2538,19 @@
       openSection("#takvim");
     }
 
+    function compareExamDates(a, b) {
+      const aDate = Date.parse(`${a.date}T00:00:00`);
+      const bDate = Date.parse(`${b.date}T00:00:00`);
+      const aOrder = Number.isFinite(aDate) ? aDate : Number.MAX_SAFE_INTEGER;
+      const bOrder = Number.isFinite(bDate) ? bDate : Number.MAX_SAFE_INTEGER;
+      return aOrder - bOrder || String(a.name || "").localeCompare(String(b.name || ""), "tr");
+    }
+
     /* 01. Ortak Deneme Kartları & Haftalık Sıralama */
     function renderExams() {
       const cards = document.getElementById("exam-cards");
+      const pastSection = document.getElementById("past-exams");
+      const pastCards = document.getElementById("past-exam-cards");
       const rankSelect = document.getElementById("ranking-exam-select");
       const activeUser = getActiveUser();
       const today = new Date();
@@ -2524,17 +2558,20 @@
 
       const prevRankVal = rankSelect.value;
       cards.innerHTML = "";
+      pastCards.innerHTML = "";
       rankSelect.innerHTML = "";
+      const sortedExams = [...state.exams].sort(compareExamDates);
 
-      state.exams.forEach(exam => {
+      sortedExams.forEach(exam => {
         const dateObj = new Date(exam.date + "T00:00:00");
-        const days = Math.ceil((dateObj - today) / 86400000);
+        const validDate = Number.isFinite(dateObj.getTime());
+        const days = validDate ? Math.ceil((dateObj - today) / 86400000) : null;
         const participants = Array.isArray(exam.participants) ? exam.participants : [];
         const scores = Array.isArray(exam.scores) ? exam.scores : [];
         const joined = activeUser ? participants.includes(activeUser.nick) : false;
         const myScore = activeUser ? scores.find(s => s.nick === activeUser.nick) : null;
         const tagClass = exam.type === "AYT" ? "ayt" : exam.type === "BRANŞ" ? "brans" : "";
-        const dateStr = Number.isNaN(dateObj.getTime())
+        const dateStr = !validDate
           ? exam.date
           : new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long", year: "numeric" }).format(dateObj);
 
@@ -2543,7 +2580,7 @@
         card.innerHTML = `
           <div class="card-top">
             <span class="tag ${tagClass}">${escapeHtml(exam.type)}</span>
-            <span class="count">${days > 0 ? days + " gün kaldı" : days === 0 ? "Bugün" : "Tamamlandı"}</span>
+            <span class="count">${!validDate ? "Tarih bekleniyor" : days > 0 ? days + " gün kaldı" : days === 0 ? "Bugün" : "Tamamlandı"}</span>
           </div>
           <h3>${escapeHtml(exam.name)}</h3>
           <div class="date">${escapeHtml(dateStr)}</div>
@@ -2563,7 +2600,8 @@
             ${exam.videoUrl ? `<a class="btn secondary sm" href="${escapeHtml(exam.videoUrl)}" target="_blank" rel="noopener noreferrer">Çözüm</a>` : ""}
           </div>
         `;
-        cards.appendChild(card);
+        const isPast = validDate && dateObj < today;
+        (isPast ? pastCards : cards).appendChild(card);
 
         const opt = document.createElement("option");
         opt.value = exam.id;
@@ -2571,7 +2609,12 @@
         rankSelect.appendChild(opt);
       });
 
-      if (prevRankVal && state.exams.some(e => e.id === prevRankVal)) {
+      pastSection.hidden = !sortedExams.some(exam => {
+        const date = new Date(exam.date + "T00:00:00");
+        return Number.isFinite(date.getTime()) && date < today;
+      });
+
+      if (prevRankVal && sortedExams.some(e => e.id === prevRankVal)) {
         rankSelect.value = prevRankVal;
       }
       renderRankingTable();
@@ -2718,6 +2761,7 @@
                 <th>Hedef Bölüm</th>
                 <th>Net</th>
                 <th>Süre</th>
+                ${isAdmin() ? "<th>Yönetim</th>" : ""}
               </tr>
             </thead>
             <tbody>
@@ -2741,6 +2785,7 @@
                         : ""}
                     </td>
                     <td>${row.minutes} dk</td>
+                    ${isAdmin() ? `<td><button type="button" class="btn danger sm" onclick="adminDeleteExamScore('${escapeHtml(exam.id)}','${escapeHtml(row.nick)}')">Neti Sil</button></td>` : ""}
                   </tr>
                 `;
               }).join("")}
@@ -3056,42 +3101,65 @@
     function drawLineChart(canvasId, emptyId, oldChart, items, maxY, colorHex) {
       const canvas = document.getElementById(canvasId);
       const emptyEl = document.getElementById(emptyId);
+      if (oldChart) oldChart.destroy();
 
       if (!items.length) {
         emptyEl.hidden = false;
         canvas.hidden = true;
-        return oldChart;
+        return null;
       }
 
       emptyEl.hidden = true;
       canvas.hidden = false;
-      if (oldChart) oldChart.destroy();
+      const sortedItems = items
+        .map((item, index) => ({ item, index, timestamp: Date.parse(item.createdAt || "") }))
+        .sort((a, b) => {
+          const aTime = Number.isFinite(a.timestamp) ? a.timestamp : Number.MAX_SAFE_INTEGER;
+          const bTime = Number.isFinite(b.timestamp) ? b.timestamp : Number.MAX_SAFE_INTEGER;
+          return aTime - bTime || a.index - b.index;
+        })
+        .map(entry => entry.item);
+      const dateLabel = (row, index) => {
+        const date = new Date(row.createdAt);
+        return Number.isFinite(date.getTime())
+          ? new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "2-digit" }).format(date)
+          : `#${index + 1}`;
+      };
 
       return new Chart(canvas, {
         type: "line",
         data: {
-          labels: items.map(i => i.name),
+          labels: sortedItems.map(dateLabel),
           datasets: [{
             label: "Net",
-            data: items.map(i => i.net),
+            data: sortedItems.map(i => i.net),
             borderColor: colorHex,
             backgroundColor: "rgba(213, 173, 132, 0.16)",
             fill: true,
             tension: 0.3,
-            pointRadius: 5,
+            pointRadius: sortedItems.length > 12 ? 3 : 5,
             pointBackgroundColor: colorHex
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { left: 4, right: 8, top: 4, bottom: 4 } },
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
+                title: (contexts) => {
+                  const row = sortedItems[contexts[0].dataIndex];
+                  const date = new Date(row.createdAt);
+                  const formattedDate = Number.isFinite(date.getTime())
+                    ? new Intl.DateTimeFormat("tr-TR").format(date)
+                    : "Tarih belirtilmedi";
+                  return `${row.name} · ${formattedDate}`;
+                },
                 afterLabel: (ctx) => {
-                  const row = items[ctx.dataIndex];
-                  const details = [`Süre: ${row.minutes} dk (${row.net}/${maxY})`];
+                  const row = sortedItems[ctx.dataIndex];
+                  const details = [`Net: ${formatNet(row.net)} / ${maxY} · Süre: ${row.minutes} dk`];
                   const subjects = PERSONAL_CATEGORY_SUBJECTS[row.category];
                   if (row.subjects && subjects) details.push(formatSubjectSummary(subjects, row.subjects));
                   return details;
@@ -3100,8 +3168,20 @@
             }
           },
           scales: {
-            y: { beginAtZero: true, max: maxY },
-            x: { grid: { display: false } }
+            y: {
+              beginAtZero: true,
+              max: maxY,
+              ticks: { maxTicksLimit: 6 }
+            },
+            x: {
+              grid: { display: false },
+              ticks: {
+                autoSkip: true,
+                maxTicksLimit: 6,
+                maxRotation: 0,
+                minRotation: 0
+              }
+            }
           }
         }
       });
@@ -3122,6 +3202,123 @@
       document.getElementById("branch-chart-sub").textContent = `${selectedBranch} · ${branchMax} soru üzerinden gelişimin.`;
       const branchItems = mine.filter(r => r.category === selectedBranch);
       branchChart = drawLineChart("branch-chart", "branch-chart-empty", branchChart, branchItems, branchMax, "#d5ad84");
+    }
+
+    let activeAdminEdit = null;
+
+    function findAdminEditableRecord(kind, id, parentId) {
+      if (kind === "question") return state.questions.find(item => item.id === id);
+      if (kind === "desk") return state.desks.find(item => item.id === id);
+      if (kind === "chat") return id === "c-welcome" ? null : state.chatMessages.find(item => item.id === id);
+      if (kind === "question_comment") {
+        const parent = state.questions.find(item => item.id === parentId);
+        return parent && (parent.comments || []).find(item => item.id === id);
+      }
+      if (kind === "desk_comment") {
+        const parent = state.desks.find(item => item.id === parentId);
+        return parent && (parent.comments || []).find(item => item.id === id);
+      }
+      return null;
+    }
+
+    function openAdminEditModal(kind, id, parentId = null) {
+      if (!isAdmin()) return;
+      const record = findAdminEditableRecord(kind, id, parentId);
+      if (!record) return;
+      activeAdminEdit = { kind, id, parentId };
+      const title = kind === "question" ? "Soruyu Düzenle"
+        : kind === "desk" ? "Masa Paylaşımını Düzenle"
+          : kind === "chat" ? "Mesajı Düzenle"
+            : "Yorumu Düzenle";
+      const fields = kind === "question" ? `
+        <div class="field"><label for="admin-edit-subject">Konu</label><input id="admin-edit-subject" value="${escapeHtml(record.subject)}" required></div>
+        <div class="field"><label for="admin-edit-text">Soru / açıklama</label><textarea id="admin-edit-text" required>${escapeHtml(record.content)}</textarea></div>
+      ` : `
+        <div class="field">
+          <label for="admin-edit-text">${kind === "desk" ? "Paylaşım açıklaması" : kind === "chat" ? "Mesaj" : "Yorum"}</label>
+          <textarea id="admin-edit-text" required>${escapeHtml(kind === "desk" ? record.caption : record.text)}</textarea>
+        </div>
+      `;
+      document.getElementById("info-modal-title").textContent = title;
+      document.getElementById("info-modal-body").innerHTML = `
+        <form onsubmit="saveAdminEdit(event)">
+          ${fields}
+          <div class="actions">
+            <button type="submit" class="btn primary">Değişiklikleri Kaydet</button>
+            <button type="button" class="btn secondary" onclick="closeInfoModal()">Vazgeç</button>
+          </div>
+        </form>
+      `;
+      document.getElementById("info-modal").classList.add("open");
+    }
+
+    async function saveAdminEdit(e) {
+      e.preventDefault();
+      if (!isAdmin() || !activeAdminEdit) return;
+      const { kind, id, parentId } = activeAdminEdit;
+      const record = findAdminEditableRecord(kind, id, parentId);
+      if (!record) return;
+      const text = document.getElementById("admin-edit-text").value.trim();
+      if (!text) {
+        alert("Metin boş bırakılamaz.");
+        return;
+      }
+      if (kind === "question") {
+        const subject = document.getElementById("admin-edit-subject").value.trim();
+        if (!subject) {
+          alert("Konu boş bırakılamaz.");
+          return;
+        }
+        record.subject = subject;
+        record.content = text;
+      } else if (kind === "desk") {
+        record.caption = text;
+      } else {
+        record.text = text;
+      }
+      record.updatedAt = new Date().toISOString();
+      const saved = await saveState();
+      if (!saved) return;
+      activeAdminEdit = null;
+      closeInfoModal();
+      renderQuestions();
+      renderDesks();
+      renderChat();
+      if (!document.getElementById("profil").hidden) renderProfilePage();
+      if (!document.getElementById("admin-panel").hidden) renderAdminPanel();
+    }
+
+    async function adminDeleteContent(kind, id, parentId = null) {
+      if (!isAdmin()) return;
+      const labels = {
+        question: "Bu soru paylaşımını ve yorumlarını",
+        question_comment: "Bu soru yorumunu",
+        desk: "Bu masa paylaşımını ve yorumlarını",
+        desk_comment: "Bu masa yorumunu",
+        chat: "Bu sohbet mesajını"
+      };
+      const label = labels[kind];
+      if (kind === "chat" && id === "c-welcome") return;
+      if (!label || !confirm(`${label} silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
+      if (kind === "question") {
+        state.questions = state.questions.filter(item => item.id !== id);
+      } else if (kind === "desk") {
+        state.desks = state.desks.filter(item => item.id !== id);
+      } else if (kind === "chat") {
+        state.chatMessages = state.chatMessages.filter(item => item.id !== id);
+      } else {
+        const parentList = kind === "question_comment" ? state.questions : state.desks;
+        const parent = parentList.find(item => item.id === parentId);
+        if (!parent) return;
+        parent.comments = (parent.comments || []).filter(item => item.id !== id);
+      }
+      const saved = await saveState();
+      if (!saved) return;
+      renderQuestions();
+      renderDesks();
+      renderChat();
+      if (!document.getElementById("profil").hidden) renderProfilePage();
+      if (!document.getElementById("admin-panel").hidden) renderAdminPanel();
     }
 
     /* 04. Soru Duvarı */
@@ -3226,12 +3423,24 @@
               </button>
             </div>
             <div class="comment-list">
-              ${comments.map(c => `<div class="comment-item"><strong style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(c.nick)}')">@${escapeHtml(c.nick)}:</strong> ${escapeHtml(c.text)}</div>`).join("")}
+            ${comments.map(c => `
+              <div class="comment-item" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <span><strong style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(c.nick)}')">@${escapeHtml(c.nick)}:</strong> ${escapeHtml(c.text)}</span>
+                ${isAdmin() ? `<span class="actions" style="margin:0;">
+                  <button type="button" class="btn secondary sm" onclick="openAdminEditModal('question_comment','${escapeHtml(c.id)}','${escapeHtml(q.id)}')">Düzenle</button>
+                  <button type="button" class="btn danger sm" onclick="adminDeleteContent('question_comment','${escapeHtml(c.id)}','${escapeHtml(q.id)}')">Sil</button>
+                </span>` : ""}
+              </div>
+            `).join("")}
               <form style="display:flex; gap:6px; margin-top:4px;" onsubmit="addQuestionComment(event, '${escapeHtml(q.id)}')">
                 <input id="q-comm-${escapeHtml(q.id)}" type="text" placeholder="Çözüm veya yorum yaz..." style="padding:8px 10px;font-size:13px;" required>
                 <button type="submit" class="btn secondary sm">Gönder</button>
               </form>
             </div>
+            ${isAdmin() ? `<div class="actions">
+            <button type="button" class="btn secondary sm" onclick="openAdminEditModal('question','${escapeHtml(q.id)}')">Gönderiyi Düzenle</button>
+            <button type="button" class="btn danger sm" onclick="adminDeleteContent('question','${escapeHtml(q.id)}')">Gönderiyi Sil</button>
+            </div>` : ""}
           </article>
         `;
       }).join("");
@@ -3341,12 +3550,24 @@
               </button>
             </div>
             <div class="comment-list">
-              ${comments.map(c => `<div class="comment-item"><strong style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(c.nick)}')">@${escapeHtml(c.nick)}:</strong> ${escapeHtml(c.text)}</div>`).join("")}
+              ${comments.map(c => `
+                <div class="comment-item" style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                  <span><strong style="cursor:pointer;" onclick="openUserProfile('${escapeHtml(c.nick)}')">@${escapeHtml(c.nick)}:</strong> ${escapeHtml(c.text)}</span>
+                  ${isAdmin() ? `<span class="actions" style="margin:0;">
+                    <button type="button" class="btn secondary sm" onclick="openAdminEditModal('desk_comment','${escapeHtml(c.id)}','${escapeHtml(d.id)}')">Düzenle</button>
+                    <button type="button" class="btn danger sm" onclick="adminDeleteContent('desk_comment','${escapeHtml(c.id)}','${escapeHtml(d.id)}')">Sil</button>
+                  </span>` : ""}
+                </div>
+              `).join("")}
               <form style="display:flex; gap:6px; margin-top:4px;" onsubmit="addDeskComment(event, '${escapeHtml(d.id)}')">
                 <input id="d-comm-${escapeHtml(d.id)}" type="text" placeholder="Masaya yorum yaz..." style="padding:8px 10px;font-size:13px;" required>
                 <button type="submit" class="btn secondary sm">Gönder</button>
               </form>
             </div>
+            ${isAdmin() ? `<div class="actions">
+              <button type="button" class="btn secondary sm" onclick="openAdminEditModal('desk','${escapeHtml(d.id)}')">Paylaşımı Düzenle</button>
+              <button type="button" class="btn danger sm" onclick="adminDeleteContent('desk','${escapeHtml(d.id)}')">Paylaşımı Sil</button>
+            </div>` : ""}
           </article>
         `;
       }).join("");
@@ -3390,6 +3611,8 @@
               <div style="display:flex; align-items:center; gap:6px;">
                 <small style="color:var(--muted); font-size:11px;">${new Date(m.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</small>
                 ${m.nick !== "İTÜ 2027" ? `<button type="button" style="border:0;background:transparent;color:var(--danger);font-size:11px;padding:0;" onclick="openQuickReport('Sohbet Mesajı (@${escapeHtml(m.nick)}): ${escapeHtml(m.text.slice(0, 40))}')">Bildir</button>` : ""}
+                ${isAdmin() && m.id !== "c-welcome" ? `<button type="button" class="btn secondary sm" onclick="openAdminEditModal('chat','${escapeHtml(m.id)}')">Düzenle</button>
+                  <button type="button" class="btn danger sm" onclick="adminDeleteContent('chat','${escapeHtml(m.id)}')">Sil</button>` : ""}
               </div>
             </div>
             <div style="font-size:13.5px; line-height:1.45;">${escapeHtml(m.text)}</div>
@@ -3799,14 +4022,46 @@
 
             <div class="panel">
               <h3>Mevcut Ortak Denemeler</h3>
-              ${state.exams.map(ex => `
-                <div class="post-card" style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;">
-                  <div>
+              <p class="panel-sub">Denemeye sonradan PDF veya çözüm bağlantısı eklemek için başlığı açıp kaydedin.</p>
+              ${[...state.exams].sort(compareExamDates).map(ex => `
+                <details class="post-card" style="margin-bottom:10px;padding:12px;">
+                  <summary style="cursor:pointer;">
                     <strong>${escapeHtml(ex.name)}</strong>
                     <div style="font-size:12px;color:var(--muted);">${escapeHtml(ex.date)} · ${(ex.participants || []).length} katılımcı · ${(ex.scores || []).length} net</div>
-                  </div>
-                  <button type="button" class="btn danger sm" onclick="adminDeleteExam('${escapeHtml(ex.id)}')">Sil</button>
-                </div>
+                  </summary>
+                  <form style="margin-top:12px;" onsubmit="adminUpdateExam(event,'${escapeHtml(ex.id)}')">
+                    <div class="field">
+                      <label>Deneme Adı</label>
+                      <input name="name" value="${escapeHtml(ex.name)}" required>
+                    </div>
+                    <div class="field-row">
+                      <div class="field">
+                        <label>Tür</label>
+                        <select name="type">
+                          <option value="TYT" ${ex.type === "TYT" ? "selected" : ""}>TYT</option>
+                          <option value="AYT" ${ex.type === "AYT" ? "selected" : ""}>AYT</option>
+                          <option value="BRANŞ" ${ex.type === "BRANŞ" ? "selected" : ""}>BRANŞ</option>
+                        </select>
+                      </div>
+                      <div class="field">
+                        <label>Tarih</label>
+                        <input name="date" type="date" value="${escapeHtml(ex.date)}" required>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label>PDF Linki</label>
+                      <input name="pdfUrl" type="url" value="${escapeHtml(ex.pdfUrl || "")}" placeholder="https://...">
+                    </div>
+                    <div class="field">
+                      <label>Çözüm Linki</label>
+                      <input name="videoUrl" type="url" value="${escapeHtml(ex.videoUrl || "")}" placeholder="https://...">
+                    </div>
+                    <div class="actions">
+                      <button type="submit" class="btn primary sm">Denemeyi Güncelle</button>
+                      <button type="button" class="btn danger sm" onclick="adminDeleteExam('${escapeHtml(ex.id)}')">Denemeyi Sil</button>
+                    </div>
+                  </form>
+                </details>
               `).join("")}
             </div>
           </div>
@@ -3848,29 +4103,75 @@
       if (!isAdmin()) return;
       const type = document.getElementById("adm-ex-type").value;
       const maxQ = type === "AYT" ? 80 : type === "BRANŞ" ? 40 : 120;
+      const date = document.getElementById("adm-ex-date").value;
+      if (!date) {
+        alert("Lütfen deneme tarihini girin.");
+        return;
+      }
       state.exams.push({
         id: "ex-" + Date.now(),
         _ownerId: currentSessionUser.id,
         name: document.getElementById("adm-ex-name").value.trim(),
         type,
         maxQ,
-        date: document.getElementById("adm-ex-date").value,
+        date,
         pdfUrl: document.getElementById("adm-ex-pdf").value.trim(),
         videoUrl: document.getElementById("adm-ex-video").value.trim(),
         participants: [],
         scores: []
       });
-      await saveState();
+      const saved = await saveState();
+      if (!saved) return;
+      renderExams();
+      renderAdminPanel();
+    }
+
+    async function adminUpdateExam(e, exId) {
+      e.preventDefault();
+      if (!isAdmin()) return;
+      const exam = state.exams.find(item => item.id === exId);
+      if (!exam) return;
+      const form = e.currentTarget;
+      const name = form.elements.namedItem("name").value.trim();
+      const type = form.elements.namedItem("type").value;
+      const date = form.elements.namedItem("date").value;
+      if (!name || !date || !["TYT", "AYT", "BRANŞ"].includes(type)) {
+        alert("Deneme adı, türü ve tarihini kontrol edin.");
+        return;
+      }
+      exam.name = name;
+      exam.type = type;
+      exam.maxQ = type === "AYT" ? 80 : type === "BRANŞ" ? 40 : 120;
+      exam.date = date;
+      exam.pdfUrl = form.elements.namedItem("pdfUrl").value.trim();
+      exam.videoUrl = form.elements.namedItem("videoUrl").value.trim();
+      const saved = await saveState();
+      if (!saved) return;
       renderExams();
       renderAdminPanel();
     }
 
     async function adminDeleteExam(exId) {
       if (!isAdmin()) return;
+      const exam = state.exams.find(item => item.id === exId);
+      if (!exam || !confirm(`"${exam.name}" denemesini ve ona ait sıralama/kayıtları silmek istediğinize emin misiniz? Bu işlem geri alınamaz.`)) return;
       state.exams = state.exams.filter(ex => ex.id !== exId);
-      await saveState();
+      const saved = await saveState();
+      if (!saved) return;
       renderExams();
       renderAdminPanel();
+    }
+
+    async function adminDeleteExamScore(examId, nick) {
+      if (!isAdmin()) return;
+      const exam = state.exams.find(item => item.id === examId);
+      if (!exam || !(exam.scores || []).some(score => normalizeNick(score.nick) === normalizeNick(nick))) return;
+      if (!confirm(`@${nick} kullanıcısının "${exam.name}" denemesindeki net kaydı silinsin mi?`)) return;
+      exam.scores = exam.scores.filter(score => normalizeNick(score.nick) !== normalizeNick(nick));
+      const saved = await saveState();
+      if (!saved) return;
+      renderExams();
+      if (!document.getElementById("admin-panel").hidden) renderAdminPanel();
     }
 
     /* Random Motivation Quote on Load */

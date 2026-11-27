@@ -316,7 +316,13 @@ with check (
 drop policy if exists "Üyeler kendi kayıtlarını silebilir" on public.club_records;
 create policy "Üyeler kendi kayıtlarını silebilir"
 on public.club_records for delete
-using (owner_id = (select auth.uid()) or public.is_club_admin());
+using (
+  public.is_club_admin()
+  or (
+    owner_id = (select auth.uid())
+    and kind in ('personal_result', 'question_like', 'desk_like')
+  )
+);
 
 -- Public media is stored in Supabase Storage, not in localStorage/profile rows.
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
